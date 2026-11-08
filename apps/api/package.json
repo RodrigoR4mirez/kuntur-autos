@@ -8,7 +8,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@kuntur/adapter-system": "workspace:*",
+    "@kuntur/contracts": "workspace:*",
     "@kuntur/core": "workspace:*",
-    "@kuntur/contracts": "workspace:*"
+    "fastify": "^5.12.8"
   }
 }

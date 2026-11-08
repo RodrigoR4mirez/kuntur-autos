@@ -1,0 +1,124 @@
+# Arquitectura limpia: cómo está organizado el código
+
+Objetivo: que el código se entienda rápido, se pueda cambiar una pieza sin romper las demás y cada regla de negocio se pruebe sin base de datos, sin servidor y sin internet.
+
+## Decisiones técnicas (2026-11-08)
+
+| Pieza | Elección | Dónde vive |
+|---|---|---|
+| Web | Next.js | `apps/web` (Fase 1) |
+| API HTTP | Fastify | `apps/api` |
+| Base de datos | PostgreSQL con Drizzle ORM | `packages/adapters/db-postgres` (Fase 1) |
+| Sesiones | Librería de autenticación en nuestro servidor (por ejemplo Better Auth) | `packages/adapters/auth` (Fase 1) |
+| Validación | Zod | `packages/contracts` |
+| Pruebas | Vitest | junto al código |
+
+Ninguna de estas elecciones aparece dentro del negocio. Cada una se puede reemplazar escribiendo un adaptador nuevo.
+
+## Las capas y la regla única
+
+```
+ interfaz (HTTP, web, móvil)   →   aplicación (casos de uso)   →   dominio (reglas)
+          ↑                                  ↓
+   composition root  ←——  adaptadores (PostgreSQL, Culqi, SMS...) implementan los puertos
+```
+
+La regla: **las dependencias apuntan hacia adentro**. El dominio no sabe que existe la aplicación; la aplicación no sabe que existe HTTP ni PostgreSQL. Lo de afuera conoce lo de adentro, nunca al revés.
+
+| Capa | Qué contiene | Qué NO puede hacer |
+|---|---|---|
+| **Dominio** (`modules/<m>/domain`) | Entidades, reglas e invariantes como funciones puras. Devuelven `Result`. | Leer o escribir datos, usar fechas del sistema, importar nada externo |
+| **Aplicación** (`modules/<m>/application`) | Casos de uso: orquestan el dominio a través de puertos. Definen los puertos (`application/ports`). | Saber de HTTP, SQL o proveedores concretos |
+| **Adaptadores** (`packages/adapters/*`) | Implementan los puertos: PostgreSQL, Culqi, proveedor de SMS | Contener reglas de negocio |
+| **Interfaz** (`apps/*/src/interface`) | Controladores delgados: validan entrada, llaman un caso de uso, traducen el resultado | Decidir reglas de negocio |
+| **Composition root** (`apps/*/src/composition-root.ts`) | Único archivo que elige adaptadores concretos y los conecta con los casos de uso | Nada más |
+
+## Mapa del repositorio
+
+```
+packages/core/src/
+  shared/                  núcleo compartido: ids, dinero, Result, puertos comunes (reloj, ids, avisos, archivos)
+  modules/
+    listings/              anuncios: ciclo de vida, vehículo, crear borrador, enviar a revisión
+    storefront/            vitrina: qué ve cada visitante según su nivel de acceso
+    accounts/              usuarios y verificación de identidad (puertos)
+    appointments/          citas con el asesor (modelo y puerto)
+    payments/              pasarela de pagos (puerto)
+    search/                búsqueda y match (puerto)
+    vehicle-history/       historial por placa (puerto)
+      <módulo>/domain/        reglas puras
+      <módulo>/application/   casos de uso y ports/
+      <módulo>/index.ts       API pública del módulo
+  in-memory/               implementaciones en memoria y datos de ejemplo (pruebas y desarrollo local)
+packages/contracts/        esquemas Zod de entrada y salida
+packages/adapters/         un paquete por proveedor: system (reloj, UUID); luego db-postgres, payments-culqi...
+apps/api/src/
+  interface/http/          rutas, presentadores, errores
+  app.ts                   arma Fastify con los casos de uso
+  composition-root.ts      elige adaptadores
+  main.ts                  arranque
+```
+
+## Reglas que verifica `pnpm boundaries`
+
+1. `core` no importa nada externo, solo rutas relativas.
+2. `shared` no depende de ningún módulo.
+3. Un módulo usa a otro **solo por su `index.ts`**, nunca por archivos internos.
+4. `domain` no depende de `application`.
+5. `contracts` solo depende de `core`.
+6. Solo las apps dependen de adaptadores, y dentro de una app solo `composition-root.ts`.
+7. `core` no tiene dependencias en su `package.json`.
+
+Si una regla se rompe, el comando falla con el archivo y el motivo, y el CI no deja fusionar.
+
+## Patrones que se repiten (aprende uno, entiendes todos)
+
+**Caso de uso = una función que recibe dependencias y devuelve una función.**
+```ts
+export function submitListingForReview(deps) {
+  return async ({ listingId, requesterId }) => { /* ... */ };
+}
+```
+Se construye en un lugar y se llama en otro. En las pruebas se le pasan repositorios en memoria.
+
+**Errores esperados = `Result`, no excepciones.**
+```ts
+const r = await submit({ listingId, requesterId });
+if (!r.ok) r.error.code; // 'listing_not_found' | 'not_owner' | 'invalid_transition'
+```
+Las excepciones quedan para fallos inesperados. La interfaz traduce cada código a su respuesta HTTP.
+
+**Puerto = una interfaz pequeña que pertenece a quien la usa.** `ListingRepository` está en `listings/application/ports`. El adaptador de PostgreSQL la implementa, pero no la define.
+
+**Privacidad en el dominio.** `projectVehicleListing` decide qué campos ve cada nivel de acceso. Es una función pura probada nivel por nivel, y la API además publica solo una lista blanca de campos.
+
+## Cómo agregar una funcionalidad (lista de pasos)
+
+1. Escribe la regla en `domain/` como función pura. Escribe sus pruebas primero.
+2. Si necesita datos o un proveedor, define o amplía un puerto en `application/ports/`.
+3. Escribe el caso de uso en `application/` y pruébalo con las implementaciones en memoria.
+4. Exporta lo público desde el `index.ts` del módulo.
+5. Si entra o sale por HTTP, agrega el esquema en `contracts` y una ruta delgada en `interface/http`.
+6. Si usa un proveedor real, escribe el adaptador en `packages/adapters/<nombre>` y conéctalo en `composition-root.ts`.
+7. Corre `pnpm check`.
+
+## Cómo se prueba
+
+| Nivel | Qué prueba | Cómo | Velocidad |
+|---|---|---|---|
+| Dominio | Reglas e invariantes | Funciones puras, sin dobles | milisegundos |
+| Casos de uso | Flujos y errores | Repositorios en memoria, reloj fijo, ids secuenciales | milisegundos |
+| HTTP | Códigos de respuesta, forma del JSON, que no se filtre el dueño | `app.inject` de Fastify, sin abrir puertos | milisegundos |
+| Adaptadores | Que cumplan el puerto | Pruebas de contrato contra PostgreSQL real en Docker (Fase 1) | segundos |
+| Flujos críticos | Registro, publicación, depósito | Playwright (Fase 2) | segundos |
+
+Hoy hay 53 pruebas y corren en menos de un segundo.
+
+## Qué falta
+
+- Adaptador de PostgreSQL con Drizzle y migraciones, con el esquema y los índices de búsqueda.
+- Catálogo de marcas, modelos y versiones.
+- Autenticación (correo, Google, SMS, DNI) detrás de un puerto, y `resolveAccessLevel` leyendo la sesión.
+- Rutas para crear y enviar anuncios, y subida de fotos.
+- `apps/web` con Next.js.
+- La composition root usa hoy repositorios en memoria: sirve para desarrollar, no para producción.

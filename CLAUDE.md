@@ -2,7 +2,7 @@
 
 Marketplace de autos de segunda mano (y nuevos) para todo el Perú. Web primero (PWA), luego iOS/Android con Expo/React Native. El diseño debe soportar después otras verticales (alquiler y venta de departamentos) sin reescribir el núcleo.
 
-Lee primero: `docs/00-decisiones.md` (decisiones tomadas) y `docs/01-arquitectura.md`.
+Lee primero: `docs/00-decisiones.md` (decisiones tomadas), `docs/01-arquitectura.md` (producto) y `docs/05-arquitectura-limpia.md` (capas, módulos y cómo agregar una funcionalidad).
 
 ## Reglas innegociables
 1. **Independencia tecnológica.** Ninguna librería, framework, base de datos o proveedor externo se importa desde `packages/core`. El núcleo solo define *puertos* (interfaces); los proveedores viven en `packages/adapters/*`.
@@ -14,11 +14,14 @@ Lee primero: `docs/00-decisiones.md` (decisiones tomadas) y `docs/01-arquitectur
 7. **Sin secretos en el repositorio.** Variables de entorno; `.env.example` sin valores reales.
 8. **Cada cambio lleva pruebas.** Núcleo con pruebas unitarias; adaptadores con pruebas de contrato; flujos críticos con Playwright.
 
+## Arquitectura en una línea
+Dominio (funciones puras) ← aplicación (casos de uso y puertos) ← adaptadores e interfaz. Las dependencias apuntan hacia adentro. Los módulos se usan entre sí solo por su `index.ts`. Los errores esperados son `Result`, no excepciones. Solo `composition-root.ts` conoce adaptadores concretos.
+
 ## Comandos
 - `pnpm check`: typecheck, formato, regla de dependencias y pruebas. Debe pasar antes de cada commit.
 - `pnpm boundaries`: verifica que `core` no importe nada externo y el orden apps → adapters → contracts → core.
 - `pnpm tokens`: regenera `packages/design-tokens/tokens.css`.
-- Los paquetes se consumen como TypeScript fuente (sin paso de build); la API corre con `node src/main.ts`. Los imports llevan extensión `.ts`.
+- Los paquetes se consumen como TypeScript fuente (sin paso de build); la API corre con `node src/main.ts`. Los imports llevan extensión `.ts`. No uses sintaxis de TypeScript que no se pueda borrar (enums, parameter properties, namespaces): Node ejecuta el código sin compilar y `erasableSyntaxOnly` lo verifica.
 
 ## Flujo por funcionalidad
 Plan → implementar → pruebas → `/simplify` → `/code-review` → `/security-review` → revisión humana.

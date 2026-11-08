@@ -1,5 +1,7 @@
 # Arquitectura
 
+> La organización vigente del código (capas, módulos y reglas) está en [`05-arquitectura-limpia.md`](05-arquitectura-limpia.md). Este documento describe el producto: niveles de acceso, proceso de compra, búsqueda y seguridad.
+
 ## Estilo
 Arquitectura hexagonal (puertos y adaptadores) en un monorepo TypeScript.
 

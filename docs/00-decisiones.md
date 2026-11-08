@@ -17,6 +17,11 @@ Fuente: las respuestas del dueño del proyecto a la ronda de preguntas. Fecha: 2
 | Identidad | Correo + celular con código SMS, inicio con Google y validación de DNI |
 | Alcance | Todo el Perú desde el inicio |
 | Backend | TypeScript + PostgreSQL |
+| Web | Next.js |
+| API HTTP | Fastify |
+| Acceso a datos | Drizzle ORM |
+| Sesiones | Librería de autenticación en nuestro servidor |
+| Plano del producto | La placa se muestra solo desde el nivel `deposit_paid` (decisión por defecto, a confirmar) |
 | Móvil | PWA primero; luego app con Expo / React Native |
 | Ingresos | Cobro por publicar o destacar anuncios |
 | Hosting | Nube administrada con contenedores Docker |
