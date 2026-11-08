@@ -1,13 +1,15 @@
-# Crea o actualiza la infraestructura de staging en Azure (Container Apps) con Bicep. Se lanza a mano.
+# Crea o actualiza la INFRAESTRUCTURA de staging en Azure con Bicep. Se lanza a mano.
+# Para cambiar la VERSIÓN de la API usa "Despliegue a staging" (se ejecuta solo en cada merge a main).
+# Por defecto NO cambia la versión: mantiene la imagen que ya corre en Azure (ver docs/10-runbook.md).
 name: Infraestructura Azure
 
 on:
   workflow_dispatch:
     inputs:
       image:
-        description: Imagen de la API (nombre@digest o nombre:tag publicado en GHCR)
-        required: true
-        default: ghcr.io/rodrigor4mirez/kuntur-autos-api:staging
+        description: 'Imagen a usar. Vacío (recomendado) = la que ya corre en Azure. Solo si sabes lo que haces: nombre@sha256:...'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -25,6 +27,17 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      APP_NAME: ${{ vars.AZURE_CONTAINERAPP_NAME }}
+      INPUT_IMAGE: ${{ inputs.image }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      SMTP_URL: ${{ secrets.SMTP_URL }}
+      MAIL_FROM: ${{ vars.MAIL_FROM }}
+      AUTH_TRUSTED_ORIGINS: ${{ vars.AUTH_TRUSTED_ORIGINS }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -34,18 +47,22 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Resolver la imagen (no cambiar la versión por accidente)
+        id: image
+        run: |
+          if [ -n "$INPUT_IMAGE" ]; then
+            image="$INPUT_IMAGE"
+          else
+            image=$(az containerapp show -n "$APP_NAME" -g "$RESOURCE_GROUP" \
+              --query 'properties.template.containers[0].image' -o tsv 2>/dev/null || true)
+            # Primera vez (la app aún no existe): se usa la última imagen de staging.
+            [ -n "$image" ] || image="ghcr.io/rodrigor4mirez/kuntur-autos-api:staging"
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "Imagen que se usará: $image" >> "$GITHUB_STEP_SUMMARY"
       - name: Vista previa de cambios (what-if)
         env:
-          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-          IMAGE: ${{ inputs.image }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          APP_NAME: ${{ vars.AZURE_CONTAINERAPP_NAME }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          SMTP_URL: ${{ secrets.SMTP_URL }}
-          MAIL_FROM: ${{ vars.MAIL_FROM }}
-          AUTH_TRUSTED_ORIGINS: ${{ vars.AUTH_TRUSTED_ORIGINS }}
+          IMAGE: ${{ steps.image.outputs.image }}
         run: |
           az deployment group what-if -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
@@ -55,16 +72,7 @@ jobs:
             authTrustedOrigins="$AUTH_TRUSTED_ORIGINS"
       - name: Aplicar
         env:
-          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-          IMAGE: ${{ inputs.image }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          APP_NAME: ${{ vars.AZURE_CONTAINERAPP_NAME }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          SMTP_URL: ${{ secrets.SMTP_URL }}
-          MAIL_FROM: ${{ vars.MAIL_FROM }}
-          AUTH_TRUSTED_ORIGINS: ${{ vars.AUTH_TRUSTED_ORIGINS }}
+          IMAGE: ${{ steps.image.outputs.image }}
         run: |
           az deployment group create -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \

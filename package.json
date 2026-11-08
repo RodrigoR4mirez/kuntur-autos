@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "boundaries": "node scripts/check-boundaries.mjs",
-    "lint": "pnpm format:check && pnpm boundaries && pnpm workflows",
+    "lint": "pnpm format:check && pnpm boundaries && pnpm workflows && pnpm delivery",
     "test": "vitest run",
     "tokens": "pnpm --filter @kuntur/design-tokens build",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
@@ -19,7 +19,8 @@
     "db:seed": "node packages/adapters/db-postgres/src/cli.ts migrate --seed",
     "test:coverage": "vitest run --coverage",
     "workflows": "node scripts/check-workflows.mjs",
-    "db:check": "node packages/adapters/db-postgres/src/cli.ts check"
+    "db:check": "node packages/adapters/db-postgres/src/cli.ts check",
+    "delivery": "node scripts/check-delivery.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",

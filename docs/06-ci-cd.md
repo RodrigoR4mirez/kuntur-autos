@@ -15,6 +15,8 @@ Ningún cambio llega a `main` ni a un servidor sin pasar por controles automáti
                                   migrar base ─► desplegar ─► prueba de humo ─► (si falla) volver atrás
 ```
 
+> **Procedimiento paso a paso para cambiar, desplegar o revertir: `docs/10-runbook.md`.** Este documento describe cómo funciona cada flujo.
+
 ## Los flujos (`.github/workflows/`)
 
 | Archivo | Cuándo corre | Qué hace |
@@ -22,7 +24,7 @@ Ningún cambio llega a `main` ni a un servidor sin pasar por controles automáti
 | `ci.yml` | Cada pull request. En `main` lo llama el despliegue. | **validate**: tipos, formato, regla de dependencias, política de flujos, pruebas con cobertura contra PostgreSQL real. **image**: construye la imagen Docker y la escanea. **infra**: compila la plantilla Bicep. |
 | `security.yml` | Cada pull request, antes de cada despliegue y cada lunes. | **codeql**: análisis estático de TypeScript. **dependency-review**: bloquea dependencias nuevas con vulnerabilidad alta (solo en PR). **audit**: `pnpm audit` de producción. **secrets**: gitleaks sobre todo el historial. **config-scan**: Trivy sobre archivos, Dockerfile y compose. |
 | `deploy-staging.yml` | Cada push a `main` y a mano. | CI → seguridad → publica la imagen en GHCR con SBOM y procedencia → escanea la imagen publicada → atesta su origen → migra la base → despliega a Azure Container Apps → prueba de humo → vuelve atrás si falla. |
-| `infra-azure.yml` | A mano. | Crea o actualiza la infraestructura de staging con Bicep (`what-if` y luego aplica). |
+| `infra-azure.yml` | A mano. | Crea o actualiza la infraestructura de staging con Bicep (`what-if` y luego aplica). Con el campo `image` vacío (por defecto) **mantiene la versión que ya corre**; no la cambia por la etiqueta `staging`. |
 | `db-migrate.yml` | A mano. | Crea las tablas en la base de staging (Neon), carga el catálogo inicial y comprueba la conexión (`pnpm db:seed` y `pnpm db:check`). Es seguro repetirlo. No necesita Azure. |
 
 Archivos de apoyo: `.github/actions/setup` (Node + pnpm + instalación exacta del lockfile), `dependabot.yml`, `CODEOWNERS`, `pull_request_template.md` y `SECURITY.md` en la raíz.
@@ -105,7 +107,7 @@ Luego, en el portal de Azure, **Cost Management → Budgets**: crear un presupue
 
 Verificado antes de subirlo:
 - Los cuatro flujos son YAML válido y cumplen el **esquema oficial de GitHub Actions**.
-- `pnpm workflows` pasa; sus reglas tienen pruebas.
+- `pnpm workflows` pasa; sus reglas tienen pruebas. `pnpm delivery` verifica que el Dockerfile copie todos los paquetes que necesita la API, que cada variable o secreto de los flujos esté documentado, que los parámetros de Bicep existan y que el flujo de infraestructura no use etiquetas móviles.
 - Los SHA se resolvieron desde los repositorios oficiales y se leyeron los `action.yml` para confirmar las entradas usadas.
 - La migración, el catálogo y la API funcionan contra PostgreSQL con el driver `pg` real.
 - `pnpm audit` sin vulnerabilidades al momento de escribir esto (la alerta de `esbuild` que traía `better-auth` se resolvió con `pnpm.overrides`).

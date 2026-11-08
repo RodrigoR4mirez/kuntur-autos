@@ -13,6 +13,7 @@ Marketplace de autos de segunda mano para todo el Perú. Web (PWA) primero; lueg
 - [`docs/07-hosting.md`](docs/07-hosting.md): dónde se despliega para pruebas y por qué.
 - [`docs/08-api.md`](docs/08-api.md): rutas HTTP, autenticación, niveles de acceso y errores.
 - [`docs/09-autenticacion.md`](docs/09-autenticacion.md): inicio de sesión por correo y Google, variables de entorno y configuración.
+- [`docs/10-runbook.md`](docs/10-runbook.md): **procedimiento oficial** para cambiar, desplegar, revertir y comprobar.
 - [`docs/04-marca.md`](docs/04-marca.md): marca, colores, tipografía y merchandise.
 - [`docs/prompts/00-master-prompt.md`](docs/prompts/00-master-prompt.md): prompt para iniciar cada sesión.
 

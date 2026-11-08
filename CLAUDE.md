@@ -2,7 +2,7 @@
 
 Marketplace de autos de segunda mano (y nuevos) para todo el Perú. Web primero (PWA), luego iOS/Android con Expo/React Native. El diseño debe soportar después otras verticales (alquiler y venta de departamentos) sin reescribir el núcleo.
 
-Lee primero: `docs/00-decisiones.md` (decisiones tomadas), `docs/01-arquitectura.md` (producto), `docs/05-arquitectura-limpia.md` (capas, módulos y cómo agregar una funcionalidad) `docs/06-ci-cd.md` (integración y despliegue), `docs/08-api.md` (rutas y errores de la API) y `docs/09-autenticacion.md` (inicio de sesión y variables de entorno).
+Lee primero: `docs/00-decisiones.md` (decisiones tomadas), `docs/01-arquitectura.md` (producto), `docs/05-arquitectura-limpia.md` (capas, módulos y cómo agregar una funcionalidad) `docs/06-ci-cd.md` (integración y despliegue), `docs/08-api.md` (rutas y errores de la API), `docs/09-autenticacion.md` (inicio de sesión y variables de entorno) y `docs/10-runbook.md` (procedimiento oficial de entrega).
 
 ## Reglas innegociables
 1. **Independencia tecnológica.** Ninguna librería, framework, base de datos o proveedor externo se importa desde `packages/core`. El núcleo solo define *puertos* (interfaces); los proveedores viven en `packages/adapters/*`.
@@ -21,9 +21,14 @@ Dominio (funciones puras) ← aplicación (casos de uso y puertos) ← adaptador
 Un cambio no está terminado hasta que su documentación en `docs/` está actualizada, en el mismo commit. Usa la skill `kuntur-docs-sync` para saber qué archivo tocar. Toda indicación nueva del dueño del proyecto ("siempre haz X") se convierte en una regla de este archivo o en una skill de `.claude/skills/`. Marca siempre lo que no pudiste verificar.
 
 ## Skills del proyecto (`.claude/skills/`)
+- `kuntur-delivery`: **obligatoria** antes de tocar `.github/`, `infra/`, Docker, migraciones, secretos o desplegar. Define el camino seguro.
+- `kuntur-azure-infra`: mapa de Azure, consultas de solo lectura y diagnóstico.
 - `kuntur-architecture`: al crear o cambiar código (capas, módulos, puertos, adaptadores, rutas).
-- `kuntur-ci-cd`: al tocar `.github/`, Docker, infraestructura, secretos, dependencias o despliegues.
+- `kuntur-ci-cd`: detalle de los flujos de GitHub, Docker y dependencias.
 - `kuntur-docs-sync`: al terminar cualquier cambio, para actualizar los documentos correctos.
+
+## Procedimiento oficial de entrega
+Cualquier cambio de despliegue, infraestructura o base de datos sigue `docs/10-runbook.md`. No hay otro camino válido. Antes de dar algo por listo: `pnpm check` (incluye `pnpm delivery`).
 
 ## CI/CD en una línea
 Todo cambio pasa por CI y seguridad antes de `main`; `main` publica una imagen escaneada y la despliega a staging con migración, prueba de humo y reversión. Acciones fijadas por SHA, Azure por OIDC, sin secretos guardados. Detalle en `docs/06-ci-cd.md`.
@@ -31,6 +36,7 @@ Todo cambio pasa por CI y seguridad antes de `main`; `main` publica una imagen e
 ## Comandos
 - `pnpm check`: typecheck, formato, regla de dependencias y pruebas. Debe pasar antes de cada commit.
 - `pnpm boundaries`: verifica que `core` no importe nada externo y el orden apps → adapters → contracts → core.
+- `pnpm delivery`: verifica que Dockerfile, documentación, parámetros de Bicep y versión de la imagen sean coherentes.
 - `pnpm workflows`: verifica la política de seguridad de los flujos de GitHub (SHA, permisos, timeouts, sin inyección).
 - `pnpm test:coverage`: pruebas con umbral de cobertura del núcleo (90 % líneas, 85 % ramas).
 - `pnpm db:migrate` / `pnpm db:seed` / `pnpm db:check`: migraciones, catálogo inicial y comprobación de la conexión (requieren `DATABASE_URL`).

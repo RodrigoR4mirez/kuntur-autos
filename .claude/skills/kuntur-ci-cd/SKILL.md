@@ -5,7 +5,7 @@ description: Integración y entrega continua de Kuntur Autos. Úsala al tocar .g
 
 # CI/CD de Kuntur Autos
 
-Lee primero `docs/06-ci-cd.md` (flujos, controles, configuración única, qué está verificado) y `docs/07-hosting.md` (por qué Azure Container Apps + Neon).
+Antes que nada lee `docs/10-runbook.md` y la skill `kuntur-delivery`: definen el camino oficial. Después lee `docs/06-ci-cd.md` (flujos, controles, configuración única, qué está verificado) y `docs/07-hosting.md` (por qué Azure Container Apps + Neon).
 
 ## Reglas
 
@@ -20,7 +20,7 @@ Lee primero `docs/06-ci-cd.md` (flujos, controles, configuración única, qué e
 
 ## Verificación obligatoria antes de commit
 
-1. `pnpm check` (incluye `pnpm workflows`, que impone las reglas de arriba).
+1. `pnpm check` (incluye `pnpm workflows`, que impone las reglas de arriba, y `pnpm delivery`, que verifica la coherencia del Dockerfile, la documentación, Bicep y la versión de la imagen).
 2. Valida los YAML nuevos contra el esquema oficial de GitHub Actions (el de SchemaStore) si cambió su estructura.
 3. Si cambió el Dockerfile y no hay Docker, simula sus pasos y dilo; no digas que la imagen se construyó.
 
