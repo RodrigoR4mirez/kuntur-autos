@@ -1,0 +1,85 @@
+/* Generado por build.mjs. No editar a mano: cambia tokens.json. */
+:root {
+  --color-brand-ink: #0D1B2A;
+  --color-brand-ink-2: #16283D;
+  --color-brand-cielo: #1F4FD8;
+  --color-brand-cielo-claro: #7FA2FF;
+  --color-brand-rocoto: #BF3417;
+  --color-brand-rocoto-claro: #FF7A5C;
+  --color-brand-oro: #E0A82E;
+  --color-neutral-fondo: #F4F6FA;
+  --color-neutral-superficie: #FFFFFF;
+  --color-neutral-linea: #D7DEE9;
+  --color-neutral-texto-suave: #4A5A70;
+  --color-neutral-texto-suave-oscuro: #9FB0C8;
+  --color-semantic-exito: #17784A;
+  --color-semantic-alerta: #F2B33D;
+  --color-semantic-error: #B3261E;
+  --font-family-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-family-body: Figtree, system-ui, sans-serif;
+  --font-family-plate: "JetBrains Mono", ui-monospace, monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.625rem;
+  --font-size-2xl: 2.125rem;
+  --font-size-3xl: 2.875rem;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --t-bg: #F4F6FA;
+  --t-surface: #FFFFFF;
+  --t-text: #0D1B2A;
+  --t-text-muted: #4A5A70;
+  --t-border: #D7DEE9;
+  --t-primary: #1F4FD8;
+  --t-on-primary: #FFFFFF;
+  --t-action: #BF3417;
+  --t-on-action: #FFFFFF;
+  --t-verified: #E0A82E;
+  --t-on-verified: #0D1B2A;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --t-bg: #0D1B2A;
+    --t-surface: #16283D;
+    --t-text: #FFFFFF;
+    --t-text-muted: #9FB0C8;
+    --t-border: #2A3D55;
+    --t-primary: #7FA2FF;
+    --t-on-primary: #0D1B2A;
+    --t-action: #FF7A5C;
+    --t-on-action: #0D1B2A;
+    --t-verified: #E0A82E;
+    --t-on-verified: #0D1B2A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --t-bg: #0D1B2A;
+  --t-surface: #16283D;
+  --t-text: #FFFFFF;
+  --t-text-muted: #9FB0C8;
+  --t-border: #2A3D55;
+  --t-primary: #7FA2FF;
+  --t-on-primary: #0D1B2A;
+  --t-action: #FF7A5C;
+  --t-on-action: #0D1B2A;
+  --t-verified: #E0A82E;
+  --t-on-verified: #0D1B2A;
+  color-scheme: dark;
+}
