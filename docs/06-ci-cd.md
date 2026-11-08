@@ -85,7 +85,11 @@ No hace falta instalar nada: Azure trae una terminal dentro del navegador (**Clo
 
 El script `infra/azure/setup.sh` hace todo lo de esta sección y es seguro repetirlo: comprueba que la suscripción esté activa, registra los servicios, crea el grupo de recursos `rg-kuntur-staging`, crea una identidad para GitHub (OIDC, sin contraseñas) limitada a este repositorio, al entorno `staging` y a ese grupo, y al final imprime los cinco valores `AZURE_*` para guardarlos como **variables** del repositorio. Se puede cambiar con las variables `REPO`, `RG`, `LOCATION`, `IDENTITY_NAME` y `CONTAINERAPP_NAME`.
 
-Probado solo con un `az` simulado (flujo de primera vez, repetición y suscripción desactivada); **no se ha ejecutado contra una cuenta real de Azure**. Si falla con "Insufficient privileges", la cuenta no puede crear registros de aplicación en su directorio. Si la región `brazilsouth` no admite Container Apps, ejecútalo con `LOCATION=eastus2`.
+El subject de la credencial es la forma con IDs internos que envía GitHub: `repo:<dueño>@<id-dueño>/<repo>@<id-repo>:environment:staging` (el script lo calcula con la API pública de GitHub). Azure exige coincidencia exacta; la forma corta `repo:<dueño>/<repo>:environment:staging` **ya no funciona** con este repositorio.
+
+Si la credencial `github-staging` ya existía con otro subject, el script no la cambia: corrígela en Microsoft Entra ID → App registrations → kuntur-github-staging → Certificates & secrets → Federated credentials → Edit.
+
+Probado con un `az` y un `curl` simulados (primera vez, repetición, suscripción desactivada, subject con IDs). El primer ejecutado en una cuenta real fue el de la suscripción de pago por uso del propietario. Si falla con "Insufficient privileges", la cuenta no puede crear registros de aplicación en su directorio. Si la región `brazilsouth` no admite Container Apps, ejecútalo con `LOCATION=eastus2`.
 
 Luego, en el portal de Azure, **Cost Management → Budgets**: crear un presupuesto mensual bajo (por ejemplo 5 USD) con alertas al 50 %, 80 % y 100 %. Es tu protección ante cobros inesperados. Verifica que Container Apps esté disponible en la región elegida; si no, usa otra.
 
@@ -111,6 +115,10 @@ Verificado en GitHub Actions (según la revisión de la pestaña Actions que hiz
 - La imagen Docker se construye. El primer escaneo de Trivy falló por `brace-expansion`, `ip-address` y `pacote`, que son internos del `npm` de `node:22-slim`; se corrigió quitando npm, npx, corepack y yarn de la imagen final, y el despliegue #2 (`7d67526`) pasó completo.
 - El paquete `kuntur-autos-api` de GHCR es público.
 - El despliegue a Azure se omitió con el aviso "Despliegue no configurado".
+
+Verificado por el propietario en su cuenta real (reportado, no lo puedo comprobar desde aquí):
+- `infra/azure/setup.sh` se ejecutó con éxito en Cloud Shell.
+- El flujo **Infraestructura Azure** pasó en verde en el segundo intento (el primero falló por el subject de la credencial). La API responde `/health` con `{"status":"ok"}` en su dirección de Azure.
 
 **No verificado todavía:**
 - Nada se ha desplegado a Azure: la plantilla Bicep compila en CI, pero no se aplicó, y los pasos de configuración de Azure y Neon no se han probado en una cuenta real.
@@ -143,4 +151,7 @@ Cifras de fuentes públicas a noviembre de 2026; confírmalas en la página del 
 | Trivy bloquea la imagen | Vulnerabilidad con arreglo en la imagen. Si es del `npm` o `yarn` incluidos en `node:22-slim` (por ejemplo `brace-expansion`, `ip-address`, `pacote`), ya se eliminan en la imagen final porque la API no los usa. Si es otra cosa, actualiza la dependencia o la imagen base |
 | Dependabot propone `node:25-slim` o similar | Solo se usan versiones LTS de Node; `dependabot.yml` ignora saltos de versión mayor de `node`. Cierra ese PR |
 | Aviso amarillo sobre `sslmode` en los registros | Lo emitía la librería `pg`: `sslmode=require` hoy verifica el certificado, pero en su próxima versión mayor dejará de hacerlo. El adaptador lo convierte a `verify-full` (`withStrictSsl`, con pruebas), así que la conexión sigue verificando al servidor y el aviso desaparece |
+| `AADSTS700213: No matching federated identity record` en "Infraestructura Azure" | El subject de la credencial no coincide con el que envía GitHub. Compara el texto de la anotación (*Show more*) con el de la credencial, letra por letra. Si ya coincide, espera unos minutos (Azure tarda en aplicar cambios) y vuelve a ejecutar |
+| `Login failed` en el flujo, sin `AADSTS` | Falta una variable `AZURE_*` o el valor tiene espacios |
+| Mensaje "No valid subscriptions found" en Cloud Shell | La cuenta no tiene una suscripción activa. Hay que crear una de pago por uso (ver el paso 1 de la guía) |
 | Prueba de humo falla en `/catalog/brands` | La API no llega a la base: revisa el secreto `DATABASE_URL` y que Neon esté despierta |

@@ -44,10 +44,20 @@ if ! az ad sp show --id "$APP_ID" --output none 2>/dev/null; then
 fi
 SP_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
 
-# GitHub podrá entrar solo desde este repositorio y solo desde el entorno "staging".
-PARAMS=$(printf '{"name":"github-staging","issuer":"https://token.actions.githubusercontent.com","subject":"repo:%s:environment:staging","audiences":["api://AzureADTokenExchange"]}' "$REPO")
+# GitHub envía como "subject" la forma con los IDs internos de dueño y repositorio
+# (repo:<dueño>@<id-dueño>/<repo>@<id-repo>:environment:staging). Azure exige que coincida exacto.
+# Los IDs se leen de la API pública de GitHub (el repositorio es público, no hace falta token).
+REPO_INFO=$(curl -fsSL "https://api.github.com/repos/$REPO")
+read -r OWNER_LOGIN OWNER_ID REPO_NAME REPO_ID <<< "$(printf '%s' "$REPO_INFO" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+print(d["owner"]["login"], d["owner"]["id"], d["name"], d["id"])')"
+SUBJECT="repo:${OWNER_LOGIN}@${OWNER_ID}/${REPO_NAME}@${REPO_ID}:environment:staging"
+echo "    Subject que usará la credencial: $SUBJECT"
+PARAMS=$(printf '{"name":"github-staging","issuer":"https://token.actions.githubusercontent.com","subject":"%s","audiences":["api://AzureADTokenExchange"]}' "$SUBJECT")
 EXISTS=$(az ad app federated-credential list --id "$APP_ID" --query "[?name=='github-staging'] | length(@)" -o tsv)
 if [ "$EXISTS" = "0" ]; then
+  # Si ya existe una credencial con ese nombre, no se modifica: revísala en el portal (ver docs/06-ci-cd.md).
   az ad app federated-credential create --id "$APP_ID" --parameters "$PARAMS" --output none
 fi
 
