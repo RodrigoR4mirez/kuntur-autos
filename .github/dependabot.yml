@@ -19,3 +19,7 @@ updates:
     directory: /apps/api
     schedule:
       interval: weekly
+    ignore:
+      # Solo versiones LTS de Node (pares). Node 25 y similares no son para producción.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']

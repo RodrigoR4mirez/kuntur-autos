@@ -62,7 +62,7 @@ Antes de usar una versión nueva, lee sus entradas (`action.yml` en ese SHA). De
 ## Despliegue y reversión
 
 1. **Migraciones primero.** `pnpm db:seed` aplica las migraciones pendientes y carga el catálogo (es idempotente). Por eso toda migración debe ser **compatible hacia atrás**: la versión anterior de la API sigue corriendo mientras se migra. Para renombrar o borrar una columna se hace en dos despliegues (primero agregar y migrar el código, luego retirar).
-2. **Imagen inmutable.** Se despliega `nombre@sha256:...`, nunca una etiqueta móvil.
+2. **Imagen mínima e inmutable.** La imagen final no incluye npm, npx, corepack ni yarn (la API corre con `node` directamente), lo que quita superficie de ataque y vulnerabilidades ajenas al proyecto. Se despliega `nombre@sha256:...`, nunca una etiqueta móvil.
 3. **Prueba de humo.** Tras desplegar se llama a `/health` (hasta 15 intentos) y a `/catalog/brands`, que confirma que la API habla con la base de datos.
 4. **Reversión.** Si algo falla después de actualizar, el flujo vuelve a la imagen anterior que registró antes de desplegar. Las migraciones no se revierten solas: por eso deben ser compatibles hacia atrás.
 5. **Sin configurar, no falla.** Si no están las variables `AZURE_*`, el flujo publica la imagen y termina en verde con un aviso.
@@ -152,5 +152,6 @@ Cifras de fuentes públicas a noviembre de 2026; confírmalas en la página del 
 | Azure no puede descargar la imagen | El paquete de GHCR es privado: hazlo público o configura credenciales de registro |
 | `pnpm workflows` falla | Una acción sin SHA, un job sin timeout, o un `${{ }}` dentro de `run` |
 | CI falla en `Validar` con la base | Las pruebas destructivas solo aceptan `localhost`; revisa `DATABASE_URL` del job |
-| Trivy bloquea la imagen | Vulnerabilidad con arreglo en la imagen base: actualiza `node:22-slim` o la dependencia |
+| Trivy bloquea la imagen | Vulnerabilidad con arreglo en la imagen. Si es del `npm` o `yarn` incluidos en `node:22-slim` (por ejemplo `brace-expansion`, `ip-address`, `pacote`), ya se eliminan en la imagen final porque la API no los usa. Si es otra cosa, actualiza la dependencia o la imagen base |
+| Dependabot propone `node:25-slim` o similar | Solo se usan versiones LTS de Node; `dependabot.yml` ignora saltos de versión mayor de `node`. Cierra ese PR |
 | Prueba de humo falla en `/catalog/brands` | La API no llega a la base: revisa el secreto `DATABASE_URL` y que Neon esté despierta |

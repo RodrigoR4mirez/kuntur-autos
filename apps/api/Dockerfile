@@ -15,6 +15,12 @@ RUN pnpm install --frozen-lockfile --prod --filter @kuntur/api...
 FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
+# La API se ejecuta con `node` directamente: npm, npx, corepack y yarn no hacen falta en producción.
+# Se eliminan porque traen dependencias propias (por ejemplo brace-expansion, ip-address, pacote)
+# con vulnerabilidades que Trivy reporta y que no podemos actualizar desde el proyecto.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+    /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
