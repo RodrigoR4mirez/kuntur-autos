@@ -2,6 +2,8 @@
 
 Estado: **borrador v1**. El logotipo, los colores y la tipografía son una propuesta de trabajo. Antes de imprimir merchandise o registrar la marca, un diseñador gráfico debe afinar el logotipo, y hay que consultar el registro de INDECOPI y el dominio. La búsqueda web no encontró negocios de autos con este nombre en Perú, pero eso no prueba que esté libre.
 
+Guía visual (privada, solo tu cuenta puede abrirla): https://claude.ai/artifact/FgpP7dASQzzvK8w8XemFvk
+
 ## Idea
 *Kuntur* es el cóndor en quechua. Es un ave que ve de lejos, vuela alto y se asocia con los Andes. Para un marketplace de autos, comunica **visión clara antes de comprar**: ver el historial real del auto desde arriba, sin sorpresas.
 
