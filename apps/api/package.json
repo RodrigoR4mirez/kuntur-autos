@@ -8,10 +8,16 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@kuntur/adapter-auth": "workspace:*",
     "@kuntur/adapter-db-postgres": "workspace:*",
+    "@kuntur/adapter-notifications": "workspace:*",
     "@kuntur/adapter-system": "workspace:*",
     "@kuntur/contracts": "workspace:*",
     "@kuntur/core": "workspace:*",
     "fastify": "^5.12.8"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
+    "drizzle-orm": "^0.45.4"
   }
 }

@@ -1,0 +1,16 @@
+{
+  "name": "@kuntur/adapter-auth",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.18",
+    "@kuntur/core": "workspace:*",
+    "better-auth": "^1.7.18"
+  }
+}

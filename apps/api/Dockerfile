@@ -8,6 +8,8 @@ COPY packages/core/package.json packages/core/
 COPY packages/contracts/package.json packages/contracts/
 COPY packages/adapters/system/package.json packages/adapters/system/
 COPY packages/adapters/db-postgres/package.json packages/adapters/db-postgres/
+COPY packages/adapters/auth/package.json packages/adapters/auth/
+COPY packages/adapters/notifications/package.json packages/adapters/notifications/
 COPY packages/design-tokens/package.json packages/design-tokens/
 COPY apps/api/package.json apps/api/
 RUN pnpm install --frozen-lockfile --prod --filter @kuntur/api...
@@ -26,11 +28,15 @@ COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
 COPY --from=deps /app/packages/adapters/system/node_modules ./packages/adapters/system/node_modules
 COPY --from=deps /app/packages/adapters/db-postgres/node_modules ./packages/adapters/db-postgres/node_modules
+COPY --from=deps /app/packages/adapters/auth/node_modules ./packages/adapters/auth/node_modules
+COPY --from=deps /app/packages/adapters/notifications/node_modules ./packages/adapters/notifications/node_modules
 COPY package.json ./
 COPY packages/core packages/core
 COPY packages/contracts packages/contracts
 COPY packages/adapters/system packages/adapters/system
 COPY packages/adapters/db-postgres packages/adapters/db-postgres
+COPY packages/adapters/auth packages/adapters/auth
+COPY packages/adapters/notifications packages/adapters/notifications
 COPY apps/api apps/api
 USER node
 EXPOSE 3000

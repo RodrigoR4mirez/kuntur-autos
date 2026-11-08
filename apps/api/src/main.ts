@@ -1,10 +1,10 @@
 import { buildApp } from './app.ts';
+import { loadConfig } from './config.ts';
 import { createWiring } from './composition-root.ts';
 
-const port = Number(process.env['PORT'] ?? 3000);
-const isProduction = process.env['NODE_ENV'] === 'production';
+const config = loadConfig(process.env);
 
-const wiring = await createWiring({ databaseUrl: process.env['DATABASE_URL'], isProduction });
+const wiring = await createWiring(config);
 const app = buildApp(wiring.useCases, { logger: { level: 'info' } });
 
 // Cierre ordenado: el orquestador envía SIGTERM al reemplazar una versión.
@@ -17,4 +17,4 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   });
 }
 
-await app.listen({ port, host: '0.0.0.0' });
+await app.listen({ port: config.port, host: '0.0.0.0' });

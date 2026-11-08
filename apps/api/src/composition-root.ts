@@ -19,12 +19,20 @@ import {
   InMemoryListingRepository,
   StaticTokenSessionResolver,
 } from '@kuntur/core/in-memory';
+import { BetterAuthSessionResolver, createAuth, createAuthHandler } from '@kuntur/adapter-auth';
+import {
+  ConsoleNotifier,
+  createSmtpTransport,
+  SmtpEmailNotifier,
+} from '@kuntur/adapter-notifications';
 import { NullSessionResolver, SystemClock, UuidIdGenerator } from '@kuntur/adapter-system';
 import {
   connectPostgres,
   PostgresCatalogRepository,
   PostgresListingRepository,
+  schema,
 } from '@kuntur/adapter-db-postgres';
+import type { Config } from './config.ts';
 import type { UseCases } from './app.ts';
 
 export interface Wiring {
@@ -33,11 +41,10 @@ export interface Wiring {
   close(): Promise<void>;
 }
 
-export interface WiringOptions {
-  /** Si viene, se usa PostgreSQL. Si no, repositorios en memoria (solo desarrollo y pruebas). */
-  readonly databaseUrl: string | undefined;
-  readonly isProduction: boolean;
-}
+/** Si hay `databaseUrl` se usa PostgreSQL; si no, repositorios en memoria (solo desarrollo y pruebas). */
+export type WiringOptions = Pick<Config, 'databaseUrl' | 'isProduction' | 'auth'> & {
+  readonly port?: number;
+};
 
 /**
  * Único lugar que conoce los adaptadores concretos. Cambiar la base de datos o cualquier
@@ -47,16 +54,17 @@ export async function createWiring(options: WiringOptions): Promise<Wiring> {
   let listings: ListingRepository;
   let catalog: CatalogRepository;
   let close = async () => {};
+  let authentication: Authentication | null = null;
   // Aún no existe el repositorio de citas en PostgreSQL (llega con el depósito, Fase 2). Mientras
   // no se puedan crear citas, un repositorio vacío da el resultado correcto: nadie tiene depósito pagado.
   const appointments = new InMemoryAppointmentRepository();
-  const sessions = createSessionResolver(options.isProduction);
 
   if (options.databaseUrl) {
     const connection = connectPostgres(options.databaseUrl);
     listings = new PostgresListingRepository(connection.db);
     catalog = new PostgresCatalogRepository(connection.db);
     close = () => connection.close();
+    authentication = createAuthentication(options, connection.db);
   } else if (options.isProduction) {
     throw new Error('DATABASE_URL es obligatoria en producción.');
   } else {
@@ -65,11 +73,13 @@ export async function createWiring(options: WiringOptions): Promise<Wiring> {
     listings = memory;
     catalog = new InMemoryCatalogRepository();
   }
+  const sessions = authentication?.sessions ?? createFallbackSessions(options.isProduction);
 
   return {
     close,
     useCases: {
       resolveSession: (token) => sessions.resolve(token),
+      ...(authentication ? { auth: authentication.routes } : {}),
       determineAccessLevel: determineAccessLevel({ appointments }),
       createDraftListing: createDraftListing({
         listings,
@@ -85,12 +95,74 @@ export async function createWiring(options: WiringOptions): Promise<Wiring> {
   };
 }
 
+interface Authentication {
+  readonly sessions: SessionResolver;
+  readonly routes: {
+    readonly handler: (request: Request) => Promise<Response>;
+    readonly baseUrl: string;
+  };
+}
+
 /**
- * Producción: sin proveedor de autenticación real todavía, nadie tiene sesión (todos anónimos).
+ * Better Auth sobre la misma base de datos. Solo se activa con AUTH_SECRET:
+ *  - correo: SMTP si está configurado; en desarrollo se imprime el enlace en el registro;
+ *    en producción sin SMTP el registro por correo queda desactivado (no se aceptan cuentas sin verificar);
+ *  - Google: solo con GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET.
+ */
+function createAuthentication(
+  options: WiringOptions,
+  db: Parameters<typeof createAuth>[0]['db'],
+): Authentication | null {
+  const { auth: config, isProduction } = options;
+  if (!config.secret) return null;
+
+  const baseUrl =
+    config.baseUrl ?? (isProduction ? undefined : `http://localhost:${options.port ?? 3000}`);
+  if (!baseUrl)
+    throw new Error('AUTH_BASE_URL es obligatoria en producción cuando hay AUTH_SECRET.');
+
+  const mailer = config.smtp
+    ? new SmtpEmailNotifier(createSmtpTransport(config.smtp.url), config.smtp.from)
+    : isProduction
+      ? null
+      : new ConsoleNotifier();
+
+  const auth = createAuth({
+    db,
+    schema: {
+      user: schema.user,
+      session: schema.session,
+      account: schema.account,
+      verification: schema.verification,
+    },
+    secret: config.secret,
+    baseUrl,
+    trustedOrigins: config.trustedOrigins,
+    mailer,
+    google: config.google,
+  });
+
+  return {
+    sessions: new BetterAuthSessionResolver(auth),
+    routes: { handler: createAuthHandler(auth), baseUrl },
+  };
+}
+
+/**
+ * Sin AUTH_SECRET no hay proveedor de autenticación.
+ * Producción: nadie tiene sesión (todos anónimos), con un aviso. Es el valor seguro: no sube privilegios.
  * Desarrollo: tokens fijos para probar las rutas protegidas con curl. Nunca llegan a producción.
  */
-function createSessionResolver(isProduction: boolean): SessionResolver {
-  if (isProduction) return new NullSessionResolver();
+function createFallbackSessions(isProduction: boolean): SessionResolver {
+  if (isProduction) {
+    console.warn(
+      JSON.stringify({
+        level: 'warn',
+        msg: 'AUTH_SECRET no está configurado: el inicio de sesión está desactivado y todos son anónimos.',
+      }),
+    );
+    return new NullSessionResolver();
+  }
   return new StaticTokenSessionResolver({
     'dev-seller': { userId: 'demo-owner' as UserId, role: 'seller' },
     'dev-buyer': { userId: 'demo-buyer' as UserId, role: 'buyer' },

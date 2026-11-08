@@ -4,7 +4,7 @@ import { migrate as migratePglite } from 'drizzle-orm/pglite/migrator';
 import { sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { catalogRepositoryContract, listingRepositoryContract } from '@kuntur/contract-tests';
-import { SAMPLE_CATALOG } from '@kuntur/core/in-memory';
+import { OWNER, SAMPLE_CATALOG } from '@kuntur/core/in-memory';
 import { connectPostgres } from './connect.ts';
 import type { Db } from './db.ts';
 import { MIGRATIONS_FOLDER, runMigrations } from './migrations.ts';
@@ -14,7 +14,8 @@ import { BRAND_SEED } from './catalog-seed-data.ts';
 import { insertCatalog, seedCatalog } from './seed-catalog.ts';
 import * as schema from './schema.ts';
 
-const TABLES = 'vehicle_details, listings, models, brands, body_types, colors';
+const TABLES =
+  'vehicle_details, listings, models, brands, body_types, colors, session, account, verification, "user"';
 
 /** Base nueva en memoria con PostgreSQL real (PGlite), migraciones aplicadas. */
 async function freshPglite(): Promise<Db> {
@@ -23,8 +24,13 @@ async function freshPglite(): Promise<Db> {
   return db;
 }
 
+/** Catálogo de ejemplo y el usuario dueño de los anuncios de prueba (listings.owner_id es una clave foránea). */
 async function withSampleCatalog(db: Db): Promise<Db> {
   await insertCatalog(db, SAMPLE_CATALOG);
+  await db
+    .insert(schema.user)
+    .values({ id: OWNER, name: 'Dueño de prueba', email: 'owner@example.com' })
+    .onConflictDoNothing();
   return db;
 }
 

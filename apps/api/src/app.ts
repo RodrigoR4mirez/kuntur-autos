@@ -9,6 +9,7 @@ import type {
   SubmitListingForReview,
 } from '@kuntur/core';
 import type { ResolveSession } from './interface/http/auth.ts';
+import { authRoutes, type AuthRouteDeps } from './interface/http/auth-routes.ts';
 import { catalogRoutes } from './interface/http/catalog-routes.ts';
 import { apiError } from './interface/http/errors.ts';
 import { healthRoutes } from './interface/http/health-routes.ts';
@@ -22,6 +23,8 @@ export interface UseCases {
   readonly submitListingForReview: SubmitListingForReview;
   /** Convierte el token de la petición en sesión (puerto SessionResolver). */
   readonly resolveSession: ResolveSession;
+  /** Rutas de inicio de sesión (/auth/*) del proveedor de autenticación. Ausente = sin inicio de sesión. */
+  readonly auth?: AuthRouteDeps;
   readonly listBrands: ListBrands;
   readonly listModelsOfBrand: ListModelsOfBrand;
   readonly getCatalogOptions: GetCatalogOptions;
@@ -42,6 +45,7 @@ export function buildApp(useCases: UseCases, options: FastifyServerOptions = {})
   healthRoutes(app);
   listingRoutes(app, useCases);
   catalogRoutes(app, useCases);
+  if (useCases.auth) authRoutes(app, useCases.auth);
 
   return app;
 }

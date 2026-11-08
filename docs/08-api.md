@@ -17,15 +17,16 @@ Las rutas protegidas esperan `Authorization: Bearer <token>`. El token se convie
 | Sin cabecera, con formato incorrecto o token desconocido o vencido | La persona es **anónima**. Las rutas públicas responden igual; las protegidas devuelven 401 |
 | Token válido | Sesión con `userId` y `role` |
 
-**Estado actual del proveedor de autenticación:**
-- **Producción:** todavía no hay proveedor real conectado (llegará con Better Auth). Mientras tanto `NullSessionResolver` hace que **todos sean anónimos**: las rutas protegidas devuelven 401 y nadie puede publicar.
-- **Desarrollo** (fuera de producción): tokens fijos `dev-seller` (usuario `demo-owner`) y `dev-buyer` (usuario `demo-buyer`). Hay una prueba que garantiza que no funcionan en producción.
+**Proveedor de autenticación:** Better Auth, con inicio de sesión por correo y Google bajo `/auth/*` (ver `09-autenticacion.md`). El token se obtiene en la cabecera `set-auth-token` al iniciar sesión.
+- **Producción sin `AUTH_SECRET`:** el inicio de sesión queda desactivado, todos son anónimos y las rutas protegidas devuelven 401.
+- **Desarrollo sin `AUTH_SECRET`:** tokens fijos `dev-seller` (usuario `demo-owner`) y `dev-buyer` (usuario `demo-buyer`). Una prueba garantiza que no funcionan en producción.
 
 ## Rutas
 
 | Método y ruta | Sesión | Qué hace | Respuestas |
 |---|---|---|---|
 | `GET /health` | no | Estado del servicio | 200 |
+| `GET/POST /auth/*` | no | Registro, verificación de correo, inicio de sesión y Google (Better Auth). Detalle en `09-autenticacion.md` | según la ruta |
 | `GET /catalog/brands` | no | Marcas | 200 |
 | `GET /catalog/brands/:id/models` | no | Modelos de una marca | 200, 400 id inválido, 404 marca desconocida |
 | `GET /catalog/options` | no | Carrocerías y colores | 200 |

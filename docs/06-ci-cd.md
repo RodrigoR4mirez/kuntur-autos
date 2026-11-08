@@ -73,7 +73,8 @@ Antes de usar una versión nueva, lee sus entradas (`action.yml` en ese SHA). De
 1. **Code security**: activar *Dependency graph*, *Dependabot alerts*, *Dependabot security updates*, *Secret scanning* con *Push protection*, y *Code scanning* (lo usa CodeQL).
 2. **Branches → regla para `main`**: exigir pull request; exigir que pasen estas comprobaciones y que la rama esté al día: *Validar (tipos, formato, dependencias, pruebas)*, *Imagen Docker (construir y escanear)*, *Infraestructura (validar Bicep)*, *Análisis de código (CodeQL)*, *Auditoría de dependencias de producción*, *Búsqueda de secretos (gitleaks)*, *Escaneo de configuración y archivos (Trivy)*, *Revisión de dependencias nuevas*; bloquear force-push y borrado; exigir resolver conversaciones. Con una sola persona no exijas aprobaciones: no podrías aprobar tu propio PR.
 3. **Environments → `staging`**: crearlo y guardar el secreto `DATABASE_URL`. Para producción, crear `production` con revisores obligatorios.
-4. **Variables del repositorio** (Settings → Secrets and variables → Actions → Variables): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, `AZURE_CONTAINERAPP_NAME`. No son secretas.
+4. **Variables del repositorio** (Settings → Secrets and variables → Actions → Variables): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, `AZURE_CONTAINERAPP_NAME`. No son secretas. Para el inicio de sesión, también variables opcionales: `GOOGLE_CLIENT_ID`, `MAIL_FROM`, `AUTH_TRUSTED_ORIGINS`.
+5. **Secretos del entorno `staging`** (además de `DATABASE_URL`), todos opcionales y descritos en [`09-autenticacion.md`](09-autenticacion.md): `AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `SMTP_URL`. El flujo **Infraestructura Azure** los pasa a la Container App como secretos; `AUTH_BASE_URL` se calcula solo.
 
 ### Base de datos (Neon)
 Crear un proyecto en Neon (plan gratuito), copiar la cadena de conexión (incluye `sslmode=require`) y guardarla como secreto `DATABASE_URL` del entorno `staging`. Una rama de Neon por entorno permite aislar staging de pruebas.
@@ -120,7 +121,7 @@ Verificado antes de subirlo:
 - `pnpm workflows` pasa; sus reglas tienen pruebas.
 - Los SHA se resolvieron desde los repositorios oficiales y se leyeron los `action.yml` para confirmar las entradas usadas.
 - La migración, el catálogo y la API funcionan contra PostgreSQL con el driver `pg` real.
-- `pnpm audit` sin vulnerabilidades al momento de escribir esto.
+- `pnpm audit` sin vulnerabilidades al momento de escribir esto (la alerta de `esbuild` que traía `better-auth` se resolvió con `pnpm.overrides`).
 
 Verificado en GitHub Actions (según la revisión de la pestaña Actions que hizo el dueño; yo no tengo acceso a esa pestaña):
 - CI, CodeQL, auditoría, gitleaks, escaneo de configuración y validación de Bicep pasaron.

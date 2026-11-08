@@ -9,7 +9,7 @@ Objetivo: que el código se entienda rápido, se pueda cambiar una pieza sin rom
 | Web | Next.js | `apps/web` (pendiente) |
 | API HTTP | Fastify | `apps/api` |
 | Base de datos | PostgreSQL con Drizzle ORM | `packages/adapters/db-postgres` (hecho: esquema, migración, repositorios, catálogo inicial) |
-| Sesiones | Librería de autenticación en nuestro servidor (por ejemplo Better Auth) | `packages/adapters/auth` (pendiente) |
+| Sesiones | Better Auth en nuestro servidor (correo y Google) | `packages/adapters/auth` (hecho; ver `09-autenticacion.md`) |
 | Validación | Zod | `packages/contracts` |
 | Pruebas | Vitest | junto al código |
 
@@ -52,7 +52,7 @@ packages/core/src/
       <módulo>/index.ts       API pública del módulo
   in-memory/               implementaciones en memoria y datos de ejemplo (pruebas y desarrollo local)
 packages/contracts/        esquemas Zod de entrada y salida
-packages/adapters/         un paquete por proveedor: system (reloj, UUID), db-postgres (PostgreSQL con Drizzle); luego auth, payments-culqi...
+packages/adapters/         un paquete por proveedor: system (reloj, UUID), db-postgres (PostgreSQL con Drizzle; también las tablas de usuarios y sesiones), auth (Better Auth), notifications (correo SMTP y consola); luego payments-culqi...
 packages/contract-tests/   suites de contrato: cualquier implementación de un puerto debe pasarlas
 apps/api/src/
   interface/http/          rutas, presentadores, errores
@@ -118,9 +118,9 @@ Las pruebas del dominio, los casos de uso, la API y las suites de contrato con P
 
 ## Qué falta
 
-- **Proveedor real de autenticación** (Better Auth: correo, Google, SMS) implementando `SessionResolver` en `packages/adapters/auth`, y enlazar `listings.owner_id` con la tabla de usuarios. Hasta entonces, en producción todos son anónimos (ver `08-api.md`).
-- **Proveedores reales de SMS y de validación de DNI** detrás de los puertos `Notifier` e `IdentityVerifier` (hace falta elegir proveedor y crear cuenta).
+- **SMS y validación de DNI** detrás de los puertos `Notifier` e `IdentityVerifier` (hay que elegir proveedor y crear cuenta).
+- **Proveedor de correo real** para producción (la configuración es solo `SMTP_URL` y `MAIL_FROM`) y dominio propio.
 - Repositorio de citas en PostgreSQL (llega con el depósito, Fase 2); hoy `determineAccessLevel` usa uno en memoria vacío, lo que es correcto mientras no se puedan crear citas.
 - Subida de fotos, búsqueda con filtros sobre PostgreSQL (el puerto y el índice parcial ya existen), moderación y panel de administración.
-- `apps/web` con Next.js.
+- `apps/web` con Next.js, CORS y pantallas de inicio de sesión.
 - Curar el catálogo inicial (versiones, modelos faltantes): hoy es una muestra de 12 marcas y 70 modelos.

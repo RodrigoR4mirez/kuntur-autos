@@ -19,6 +19,30 @@ param image string
 @description('Cadena de conexión de PostgreSQL (Neon). Se guarda como secreto de la app.')
 param databaseUrl string
 
+@secure()
+@description('Secreto de sesiones (mínimo 32 caracteres). Vacío = inicio de sesión desactivado y todos anónimos.')
+param authSecret string = ''
+
+@description('URL pública de la API. Vacía = se calcula con el dominio de Container Apps.')
+param authBaseUrl string = ''
+
+@description('Orígenes de la web autorizados, separados por comas.')
+param authTrustedOrigins string = ''
+
+@description('ID de cliente de Google OAuth (no es secreto). Vacío = sin inicio con Google.')
+param googleClientId string = ''
+
+@secure()
+@description('Secreto de cliente de Google OAuth.')
+param googleClientSecret string = ''
+
+@secure()
+@description('URL SMTP del proveedor de correo, por ejemplo smtps://usuario:clave@smtp.proveedor.com:465.')
+param smtpUrl string = ''
+
+@description('Remitente de los correos, por ejemplo Kuntur Autos <no-responder@tudominio.pe>.')
+param mailFrom string = ''
+
 @description('Puerto en el que escucha la API dentro del contenedor.')
 param targetPort int = 3000
 
@@ -54,6 +78,99 @@ resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+// El dominio de la app es <nombre>.<dominio del entorno>; se calcula aquí para no depender de un paso manual.
+var computedBaseUrl = empty(authBaseUrl) ? 'https://${appName}.${managedEnvironment.properties.defaultDomain}' : authBaseUrl
+
+var appSecrets = concat(
+  [
+    {
+      name: 'database-url'
+      value: databaseUrl
+    }
+  ],
+  empty(authSecret)
+    ? []
+    : [
+        {
+          name: 'auth-secret'
+          value: authSecret
+        }
+      ],
+  empty(googleClientSecret)
+    ? []
+    : [
+        {
+          name: 'google-client-secret'
+          value: googleClientSecret
+        }
+      ],
+  empty(smtpUrl)
+    ? []
+    : [
+        {
+          name: 'smtp-url'
+          value: smtpUrl
+        }
+      ]
+)
+
+var appEnv = concat(
+  [
+    {
+      name: 'NODE_ENV'
+      value: 'production'
+    }
+    {
+      name: 'PORT'
+      value: string(targetPort)
+    }
+    {
+      name: 'DATABASE_URL'
+      secretRef: 'database-url'
+    }
+  ],
+  empty(authSecret)
+    ? []
+    : [
+        {
+          name: 'AUTH_SECRET'
+          secretRef: 'auth-secret'
+        }
+        {
+          name: 'AUTH_BASE_URL'
+          value: computedBaseUrl
+        }
+        {
+          name: 'AUTH_TRUSTED_ORIGINS'
+          value: authTrustedOrigins
+        }
+      ],
+  empty(googleClientSecret)
+    ? []
+    : [
+        {
+          name: 'GOOGLE_CLIENT_ID'
+          value: googleClientId
+        }
+        {
+          name: 'GOOGLE_CLIENT_SECRET'
+          secretRef: 'google-client-secret'
+        }
+      ],
+  empty(smtpUrl)
+    ? []
+    : [
+        {
+          name: 'SMTP_URL'
+          secretRef: 'smtp-url'
+        }
+        {
+          name: 'MAIL_FROM'
+          value: mailFrom
+        }
+      ]
+)
+
 resource api 'Microsoft.App/containerApps@2024-03-01' = {
   name: appName
   location: location
@@ -67,12 +184,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'auto'
         allowInsecure: false
       }
-      secrets: [
-        {
-          name: 'database-url'
-          value: databaseUrl
-        }
-      ]
+      secrets: appSecrets
     }
     template: {
       containers: [
@@ -83,20 +195,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
             cpu: json('0.25')
             memory: '0.5Gi'
           }
-          env: [
-            {
-              name: 'NODE_ENV'
-              value: 'production'
-            }
-            {
-              name: 'PORT'
-              value: string(targetPort)
-            }
-            {
-              name: 'DATABASE_URL'
-              secretRef: 'database-url'
-            }
-          ]
+          env: appEnv
           probes: [
             {
               type: 'Liveness'
@@ -139,3 +238,5 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
 
 output url string = 'https://${api.properties.configuration.ingress.fqdn}'
 output appName string = api.name
+output authBaseUrl string = computedBaseUrl
+output googleRedirectUri string = '${computedBaseUrl}/auth/callback/google'

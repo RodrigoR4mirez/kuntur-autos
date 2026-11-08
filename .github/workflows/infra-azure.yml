@@ -40,18 +40,36 @@ jobs:
           IMAGE: ${{ inputs.image }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           APP_NAME: ${{ vars.AZURE_CONTAINERAPP_NAME }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          SMTP_URL: ${{ secrets.SMTP_URL }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}
+          AUTH_TRUSTED_ORIGINS: ${{ vars.AUTH_TRUSTED_ORIGINS }}
         run: |
           az deployment group what-if -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
-            --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME"
+            --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
+            authSecret="$AUTH_SECRET" googleClientId="$GOOGLE_CLIENT_ID" \
+            googleClientSecret="$GOOGLE_CLIENT_SECRET" smtpUrl="$SMTP_URL" mailFrom="$MAIL_FROM" \
+            authTrustedOrigins="$AUTH_TRUSTED_ORIGINS"
       - name: Aplicar
         env:
           RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           IMAGE: ${{ inputs.image }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           APP_NAME: ${{ vars.AZURE_CONTAINERAPP_NAME }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          SMTP_URL: ${{ secrets.SMTP_URL }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}
+          AUTH_TRUSTED_ORIGINS: ${{ vars.AUTH_TRUSTED_ORIGINS }}
         run: |
           az deployment group create -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
             --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
+            authSecret="$AUTH_SECRET" googleClientId="$GOOGLE_CLIENT_ID" \
+            googleClientSecret="$GOOGLE_CLIENT_SECRET" smtpUrl="$SMTP_URL" mailFrom="$MAIL_FROM" \
+            authTrustedOrigins="$AUTH_TRUSTED_ORIGINS" \
             --query 'properties.outputs' -o json
