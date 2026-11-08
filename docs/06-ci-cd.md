@@ -23,6 +23,7 @@ Ningún cambio llega a `main` ni a un servidor sin pasar por controles automáti
 | `security.yml` | Cada pull request, antes de cada despliegue y cada lunes. | **codeql**: análisis estático de TypeScript. **dependency-review**: bloquea dependencias nuevas con vulnerabilidad alta (solo en PR). **audit**: `pnpm audit` de producción. **secrets**: gitleaks sobre todo el historial. **config-scan**: Trivy sobre archivos, Dockerfile y compose. |
 | `deploy-staging.yml` | Cada push a `main` y a mano. | CI → seguridad → publica la imagen en GHCR con SBOM y procedencia → escanea la imagen publicada → atesta su origen → migra la base → despliega a Azure Container Apps → prueba de humo → vuelve atrás si falla. |
 | `infra-azure.yml` | A mano. | Crea o actualiza la infraestructura de staging con Bicep (`what-if` y luego aplica). |
+| `db-migrate.yml` | A mano. | Crea las tablas en la base de staging (Neon), carga el catálogo inicial y comprueba la conexión (`pnpm db:seed` y `pnpm db:check`). Es seguro repetirlo. No necesita Azure. |
 
 Archivos de apoyo: `.github/actions/setup` (Node + pnpm + instalación exacta del lockfile), `dependabot.yml`, `CODEOWNERS`, `pull_request_template.md` y `SECURITY.md` en la raíz.
 
@@ -107,7 +108,7 @@ echo "AZURE_SUBSCRIPTION_ID=$SUB"
 Luego, en el portal de Azure, **Cost Management → Budgets**: crear un presupuesto mensual bajo (por ejemplo 5 USD) con alertas al 50 %, 80 % y 100 %. Es tu protección ante cobros inesperados. Verifica que Container Apps esté disponible en la región elegida; si no, usa otra.
 
 ### Orden de la primera vez
-1. Neon y entorno `staging` con `DATABASE_URL` (arriba).
+1. Neon y entorno `staging` con `DATABASE_URL` (arriba). Luego, en GitHub: **Actions → Base de datos staging → Run workflow**. Debe terminar en verde y el último paso imprime `Conexión correcta. Marcas: 12. Modelos: 70. Anuncios: 0.` Con eso confirmas que la base funciona antes de tocar Azure.
 2. Fusionar a `main`: el flujo publica la imagen en GHCR (el despliegue queda omitido).
 3. En GitHub → Packages → `kuntur-autos-api` → Package settings: si la imagen es privada, cambiar la visibilidad a pública (el repositorio es público) para que Azure pueda descargarla sin credenciales.
 4. Ejecutar los comandos de Azure y guardar las cinco variables `AZURE_*`.

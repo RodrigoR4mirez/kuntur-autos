@@ -18,7 +18,8 @@
     "db:migrate": "node packages/adapters/db-postgres/src/cli.ts migrate",
     "db:seed": "node packages/adapters/db-postgres/src/cli.ts migrate --seed",
     "test:coverage": "vitest run --coverage",
-    "workflows": "node scripts/check-workflows.mjs"
+    "workflows": "node scripts/check-workflows.mjs",
+    "db:check": "node packages/adapters/db-postgres/src/cli.ts check"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",

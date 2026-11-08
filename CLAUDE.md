@@ -33,7 +33,7 @@ Todo cambio pasa por CI y seguridad antes de `main`; `main` publica una imagen e
 - `pnpm boundaries`: verifica que `core` no importe nada externo y el orden apps → adapters → contracts → core.
 - `pnpm workflows`: verifica la política de seguridad de los flujos de GitHub (SHA, permisos, timeouts, sin inyección).
 - `pnpm test:coverage`: pruebas con umbral de cobertura del núcleo (90 % líneas, 85 % ramas).
-- `pnpm db:migrate` / `pnpm db:seed`: migraciones y catálogo inicial (requieren `DATABASE_URL`).
+- `pnpm db:migrate` / `pnpm db:seed` / `pnpm db:check`: migraciones, catálogo inicial y comprobación de la conexión (requieren `DATABASE_URL`).
 - `node scripts/pin-action.mjs owner/repo`: SHA de la última versión estable de una acción.
 - `pnpm tokens`: regenera `packages/design-tokens/tokens.css`.
 - Los paquetes se consumen como TypeScript fuente (sin paso de build); la API corre con `node src/main.ts`. Los imports llevan extensión `.ts`. No uses sintaxis de TypeScript que no se pueda borrar (enums, parameter properties, namespaces): Node ejecuta el código sin compilar y `erasableSyntaxOnly` lo verifica.
