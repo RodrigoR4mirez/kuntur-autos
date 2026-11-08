@@ -12,4 +12,15 @@ Marketplace de autos de segunda mano para todo el Perú. Web (PWA) primero; lueg
 - [`docs/prompts/00-master-prompt.md`](docs/prompts/00-master-prompt.md): prompt para iniciar cada sesión.
 
 ## Estado
-Solo documentación y estructura de carpetas. No hay código todavía. El siguiente paso es la Fase 0.
+**Fase 0 completada**: monorepo pnpm, TypeScript estricto, núcleo con puertos y dominio, contratos con Zod, API mínima con `/health`, regla de dependencias verificada por script, Prettier, Vitest, Dockerfile, `compose.yaml` y CI. Falta la Fase 1.
+
+## Cómo trabajar
+Requisitos: Node 22 o superior y pnpm 10.
+
+```bash
+pnpm install
+pnpm check      # typecheck + formato + regla de dependencias + pruebas
+pnpm test
+pnpm --filter @kuntur/api start
+docker compose up --build   # PostgreSQL + API (requiere Docker)
+```

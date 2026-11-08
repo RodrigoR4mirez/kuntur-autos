@@ -14,6 +14,12 @@ Lee primero: `docs/00-decisiones.md` (decisiones tomadas) y `docs/01-arquitectur
 7. **Sin secretos en el repositorio.** Variables de entorno; `.env.example` sin valores reales.
 8. **Cada cambio lleva pruebas.** Núcleo con pruebas unitarias; adaptadores con pruebas de contrato; flujos críticos con Playwright.
 
+## Comandos
+- `pnpm check`: typecheck, formato, regla de dependencias y pruebas. Debe pasar antes de cada commit.
+- `pnpm boundaries`: verifica que `core` no importe nada externo y el orden apps → adapters → contracts → core.
+- `pnpm tokens`: regenera `packages/design-tokens/tokens.css`.
+- Los paquetes se consumen como TypeScript fuente (sin paso de build); la API corre con `node src/main.ts`. Los imports llevan extensión `.ts`.
+
 ## Flujo por funcionalidad
 Plan → implementar → pruebas → `/simplify` → `/code-review` → `/security-review` → revisión humana.
 
