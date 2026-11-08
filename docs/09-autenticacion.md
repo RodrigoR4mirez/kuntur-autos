@@ -173,13 +173,15 @@ pnpm --filter @kuntur/api start
 ```
 Registra una cuenta con `POST /auth/sign-up/email`: el enlace de verificación aparece en el registro de la API (o llega a tu correo si configuraste `SMTP_URL` y `MAIL_FROM`).
 
-Para probar Google en local, con `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en el entorno, pide la URL de Google y ábrela en el navegador (el comportamiento esperado viene de la documentación de la librería y **no se probó**):
+**Verificado en local:** con `AUTH_SECRET` y credenciales de Google de prueba, `POST /auth/sign-in/social` devuelve una URL de `accounts.google.com` con `client_id`, `scope` (`email profile openid`) y `redirect_uri` igual a `<AUTH_BASE_URL>/auth/callback/google`. Lo que **no** se ha probado es el inicio de sesión real con Google (requiere credenciales reales y un navegador):
 ```bash
 curl -s -X POST http://localhost:3000/auth/sign-in/social \
   -H 'content-type: application/json' -H 'origin: http://localhost:3000' \
   -d '{"provider":"google","callbackURL":"http://localhost:3000/auth/get-session"}'
 ```
 La respuesta trae una `url`. Al aceptar en Google vuelves a `/auth/callback/google` y terminas en `/auth/get-session`, que muestra tu sesión.
+
+**Guía del flujo completo, paso a paso (staging): `docs/11-google-login.md`.**
 
 ## Seguridad
 

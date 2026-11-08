@@ -2,7 +2,7 @@
 
 **Este es el único procedimiento oficial.** Cualquier persona o agente (Claude, otro chat, un humano) que vaya a tocar código, infraestructura, base de datos, secretos o despliegues debe seguir este documento. Si algo aquí no coincide con la realidad, corrige este documento en el mismo cambio.
 
-Complementa: `06-ci-cd.md` (cómo funciona cada flujo), `09-autenticacion.md` (variables de inicio de sesión) y la skill `kuntur-delivery`.
+Complementa: `11-google-login.md` (inicio de sesión con Google paso a paso), `06-ci-cd.md` (cómo funciona cada flujo), `09-autenticacion.md` (variables de inicio de sesión) y la skill `kuntur-delivery`.
 
 ## 1. Estado actual (no contiene secretos ni identificadores privados)
 
