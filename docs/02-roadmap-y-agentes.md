@@ -2,6 +2,12 @@
 
 Modelos: **Opus 5.5** (`claude-opus-5-5`) para arquitectura, seguridad y revisión final. **Sonnet 5.5** (`claude-sonnet-5-5`) para implementación diaria. **Haiku 5.5** (`claude-haiku-5-5`) para búsquedas rápidas, documentación y cambios pequeños.
 
+## Estado actual (2026-11-08)
+
+- **Fase 0**: completada.
+- **Fase 1** (en curso): hecho: arquitectura limpia, vitrina con niveles de acceso, catálogo, PostgreSQL con migraciones y CI/CD con seguridad y despliegue a staging (por configurar y ejecutar). Falta: autenticación, publicar anuncios con fotos, búsqueda con filtros, moderación y la web con Next.js.
+- Fases 2 a 5: sin empezar.
+
 ## Fase 0 — Cimientos
 | Paso | Agente / skill | Modelo |
 |---|---|---|

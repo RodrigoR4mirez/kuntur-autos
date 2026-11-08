@@ -1,0 +1,156 @@
+# Integración y entrega continua (CI/CD)
+
+Este documento es obligatorio para quien toque `.github/`, `apps/api/Dockerfile`, `infra/` o cualquier despliegue. Si cambias algo de eso, actualiza este documento en el mismo commit.
+
+## Idea general
+
+Ningún cambio llega a `main` ni a un servidor sin pasar por controles automáticos, y nada se despliega con secretos guardados.
+
+```
+ pull request ──► CI (tipos, formato, reglas, pruebas, imagen, Bicep) ──┐
+              └─► Seguridad (CodeQL, dependencias, secretos, config)  ──┤  deben pasar para fusionar
+                                                                        ▼
+ merge a main ──► CI ─► Seguridad ─► construir imagen ─► escanear ─► firmar origen
+                                                                        ▼
+                                  migrar base ─► desplegar ─► prueba de humo ─► (si falla) volver atrás
+```
+
+## Los flujos (`.github/workflows/`)
+
+| Archivo | Cuándo corre | Qué hace |
+|---|---|---|
+| `ci.yml` | Cada pull request. En `main` lo llama el despliegue. | **validate**: tipos, formato, regla de dependencias, política de flujos, pruebas con cobertura contra PostgreSQL real. **image**: construye la imagen Docker y la escanea. **infra**: compila la plantilla Bicep. |
+| `security.yml` | Cada pull request, antes de cada despliegue y cada lunes. | **codeql**: análisis estático de TypeScript. **dependency-review**: bloquea dependencias nuevas con vulnerabilidad alta (solo en PR). **audit**: `pnpm audit` de producción. **secrets**: gitleaks sobre todo el historial. **config-scan**: Trivy sobre archivos, Dockerfile y compose. |
+| `deploy-staging.yml` | Cada push a `main` y a mano. | CI → seguridad → publica la imagen en GHCR con SBOM y procedencia → escanea la imagen publicada → atesta su origen → migra la base → despliega a Azure Container Apps → prueba de humo → vuelve atrás si falla. |
+| `infra-azure.yml` | A mano. | Crea o actualiza la infraestructura de staging con Bicep (`what-if` y luego aplica). |
+
+Archivos de apoyo: `.github/actions/setup` (Node + pnpm + instalación exacta del lockfile), `dependabot.yml`, `CODEOWNERS`, `pull_request_template.md` y `SECURITY.md` en la raíz.
+
+## Controles de seguridad
+
+| Riesgo | Control |
+|---|---|
+| Código vulnerable | CodeQL en cada PR y cada semana |
+| Dependencia vulnerable o maliciosa | `pnpm audit`, revisión de dependencias en PR, Dependabot semanal, lockfile congelado (`--frozen-lockfile`) |
+| Secretos filtrados | gitleaks sobre el historial completo; Trivy `secret`; `.env` fuera del repositorio |
+| Imagen vulnerable | Trivy sobre la imagen (alta y crítica con arreglo) antes y después de publicarla |
+| Acción de terceros comprometida | Cada acción fijada por **SHA de commit**, verificada por `pnpm workflows` |
+| Inyección de comandos en flujos | Prohibido `${{ }}` dentro de `run`; los valores pasan por `env` |
+| Permisos excesivos | `permissions: contents: read` por defecto; cada job pide solo lo que necesita |
+| Contraseñas de nube guardadas | Azure por **OIDC**: GitHub obtiene un token temporal, no hay clave en secretos |
+| Origen de la imagen desconocido | SBOM y atestación de procedencia (`provenance: mode=max`, `attest-build-provenance`) |
+| Bases remotas borradas por una prueba | Las pruebas destructivas solo corren contra `localhost` |
+| Despliegues simultáneos o a medias | `concurrency` sin cancelar; pruebas de humo y reversión automática |
+
+## Fijar acciones por SHA
+
+`pnpm workflows` (script `scripts/check-workflows.mjs`) falla si:
+1. una acción externa no usa un SHA de 40 caracteres con un comentario de versión,
+2. falta `permissions` al nivel superior,
+3. un job no tiene `timeout-minutes`,
+4. un `run` usa `${{ }}`,
+5. `actions/checkout` no usa `persist-credentials: false`,
+6. se usa `pull_request_target`.
+
+Para agregar o actualizar una acción:
+```bash
+node scripts/pin-action.mjs actions/checkout
+# imprime: uses: actions/checkout@<sha> # v7.0.1
+```
+Antes de usar una versión nueva, lee sus entradas (`action.yml` en ese SHA). Dependabot propone las actualizaciones cada semana.
+
+## Despliegue y reversión
+
+1. **Migraciones primero.** `pnpm db:seed` aplica las migraciones pendientes y carga el catálogo (es idempotente). Por eso toda migración debe ser **compatible hacia atrás**: la versión anterior de la API sigue corriendo mientras se migra. Para renombrar o borrar una columna se hace en dos despliegues (primero agregar y migrar el código, luego retirar).
+2. **Imagen inmutable.** Se despliega `nombre@sha256:...`, nunca una etiqueta móvil.
+3. **Prueba de humo.** Tras desplegar se llama a `/health` (hasta 15 intentos) y a `/catalog/brands`, que confirma que la API habla con la base de datos.
+4. **Reversión.** Si algo falla después de actualizar, el flujo vuelve a la imagen anterior que registró antes de desplegar. Las migraciones no se revierten solas: por eso deben ser compatibles hacia atrás.
+5. **Sin configurar, no falla.** Si no están las variables `AZURE_*`, el flujo publica la imagen y termina en verde con un aviso.
+
+## Configuración única
+
+### En GitHub (Settings del repositorio)
+1. **Code security**: activar *Dependency graph*, *Dependabot alerts*, *Dependabot security updates*, *Secret scanning* con *Push protection*, y *Code scanning* (lo usa CodeQL).
+2. **Branches → regla para `main`**: exigir pull request; exigir que pasen estas comprobaciones y que la rama esté al día: *Validar (tipos, formato, dependencias, pruebas)*, *Imagen Docker (construir y escanear)*, *Infraestructura (validar Bicep)*, *Análisis de código (CodeQL)*, *Auditoría de dependencias de producción*, *Búsqueda de secretos (gitleaks)*, *Escaneo de configuración y archivos (Trivy)*, *Revisión de dependencias nuevas*; bloquear force-push y borrado; exigir resolver conversaciones. Con una sola persona no exijas aprobaciones: no podrías aprobar tu propio PR.
+3. **Environments → `staging`**: crearlo y guardar el secreto `DATABASE_URL`. Para producción, crear `production` con revisores obligatorios.
+4. **Variables del repositorio** (Settings → Secrets and variables → Actions → Variables): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, `AZURE_CONTAINERAPP_NAME`. No son secretas.
+
+### Base de datos (Neon)
+Crear un proyecto en Neon (plan gratuito), copiar la cadena de conexión (incluye `sslmode=require`) y guardarla como secreto `DATABASE_URL` del entorno `staging`. Una rama de Neon por entorno permite aislar staging de pruebas.
+
+### Azure (una vez, desde tu terminal)
+```bash
+az login
+az account set --subscription <ID-DE-TU-SUSCRIPCIÓN>
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.OperationalInsights
+az group create -n rg-kuntur-staging -l brazilsouth
+
+# Identidad para GitHub con OIDC (sin contraseñas)
+APP_ID=$(az ad app create --display-name kuntur-github-staging --query appId -o tsv)
+az ad sp create --id "$APP_ID"
+az ad app federated-credential create --id "$APP_ID" --parameters '{
+  "name": "github-staging",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:RodrigoR4mirez/kuntur-autos:environment:staging",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+SUB=$(az account show --query id -o tsv)
+az role assignment create --assignee "$APP_ID" --role Contributor \
+  --scope "/subscriptions/$SUB/resourceGroups/rg-kuntur-staging"
+
+echo "AZURE_CLIENT_ID=$APP_ID"
+echo "AZURE_TENANT_ID=$(az account show --query tenantId -o tsv)"
+echo "AZURE_SUBSCRIPTION_ID=$SUB"
+```
+Luego, en el portal de Azure, **Cost Management → Budgets**: crear un presupuesto mensual bajo (por ejemplo 5 USD) con alertas al 50 %, 80 % y 100 %. Es tu protección ante cobros inesperados. Verifica que Container Apps esté disponible en la región elegida; si no, usa otra.
+
+### Orden de la primera vez
+1. Neon y entorno `staging` con `DATABASE_URL` (arriba).
+2. Fusionar a `main`: el flujo publica la imagen en GHCR (el despliegue queda omitido).
+3. En GitHub → Packages → `kuntur-autos-api` → Package settings: si la imagen es privada, cambiar la visibilidad a pública (el repositorio es público) para que Azure pueda descargarla sin credenciales.
+4. Ejecutar los comandos de Azure y guardar las cinco variables `AZURE_*`.
+5. Ejecutar a mano el flujo **Infraestructura Azure** con la imagen `ghcr.io/rodrigor4mirez/kuntur-autos-api:staging`. Crea el entorno y la Container App.
+6. Desde ahí, cada merge a `main` se despliega solo.
+
+## Qué está verificado y qué no
+
+Verificado antes de subirlo:
+- Los cuatro flujos son YAML válido y cumplen el **esquema oficial de GitHub Actions**.
+- `pnpm workflows` pasa; sus reglas tienen pruebas.
+- Los SHA se resolvieron desde los repositorios oficiales y se leyeron los `action.yml` para confirmar las entradas usadas.
+- La migración, el catálogo y la API funcionan contra PostgreSQL con el driver `pg` real.
+- Los pasos del Dockerfile se simularon a mano (instalación de producción y arranque).
+- `pnpm audit` sin vulnerabilidades al momento de escribir esto.
+
+**No verificado** (se comprueba en la primera ejecución en GitHub):
+- Los flujos todavía no corrieron en GitHub Actions.
+- La imagen Docker no se construyó aquí (no hay servicio Docker en esta sesión).
+- La plantilla Bicep no se compiló aquí; el job `infra` de CI la valida. No se desplegó nada a Azure.
+- Hallazgos de CodeQL, Trivy y gitleaks: se conocerán en la primera corrida.
+- Disponibilidad de Container Apps en Brazil South y el comportamiento de GHCR con paquetes públicos.
+
+## Costos y límites
+
+Cifras de fuentes públicas a noviembre de 2026; confírmalas en la página del proveedor.
+- Container Apps (plan de consumo): cuota mensual gratuita de 180.000 vCPU-segundos, 360.000 GiB-segundos y 2 millones de peticiones por suscripción; escala a cero ([precios](https://azure.microsoft.com/en-us/pricing/details/container-apps/)). Log Analytics y el tráfico fuera de la cuota se cobran: vigila el presupuesto.
+- Neon (gratis): 1 GB por proyecto y 100 horas de cómputo al mes, sin cobro por exceso; la base se duerme sin uso y la primera consulta tarda más ([FAQ](https://neon.com/faqs/free-plan-limits-and-quotas)).
+- GHCR y GitHub Actions: gratis para repositorios públicos.
+- La decisión de hosting y las alternativas están en [`07-hosting.md`](07-hosting.md).
+
+## Cómo cambiar de proveedor
+
+- **Imagen**: es un contenedor Docker estándar; corre igual en Cloud Run, Render, Fly o un servidor propio. Solo cambia el paso de despliegue de `deploy-staging.yml` y `infra/azure/`.
+- **Base de datos**: Neon es PostgreSQL estándar. Cambiar de proveedor es cambiar `DATABASE_URL`.
+- **Registro de imágenes**: GHCR; se puede cambiar el `registry` del login y el nombre.
+
+## Problemas frecuentes
+
+| Síntoma | Causa probable |
+|---|---|
+| `Despliegue no configurado` en verde | Faltan las variables `AZURE_*` |
+| Azure no puede descargar la imagen | El paquete de GHCR es privado: hazlo público o configura credenciales de registro |
+| `pnpm workflows` falla | Una acción sin SHA, un job sin timeout, o un `${{ }}` dentro de `run` |
+| CI falla en `Validar` con la base | Las pruebas destructivas solo aceptan `localhost`; revisa `DATABASE_URL` del job |
+| Trivy bloquea la imagen | Vulnerabilidad con arreglo en la imagen base: actualiza `node:22-slim` o la dependencia |
+| Prueba de humo falla en `/catalog/brands` | La API no llega a la base: revisa el secreto `DATABASE_URL` y que Neon esté despierta |

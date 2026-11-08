@@ -21,6 +21,10 @@ Fuente: las respuestas del dueño del proyecto a la ronda de preguntas. Fecha: 2
 | API HTTP | Fastify |
 | Acceso a datos | Drizzle ORM |
 | Sesiones | Librería de autenticación en nuestro servidor |
+| Hosting de pruebas | Azure Container Apps + Neon (PostgreSQL) + GitHub Container Registry. Ver `07-hosting.md` |
+| Entornos | Staging automático en cada merge a `main`; producción después, con aprobación manual |
+| CI/CD | GitHub Actions: CI, seguridad (CodeQL, dependencias, secretos, Trivy), despliegue con OIDC. Ver `06-ci-cd.md` |
+| Documentación | Viva y obligatoria: se actualiza en el mismo commit que el cambio; las indicaciones del dueño pasan a `CLAUDE.md` o a skills |
 | Plano del producto | La placa se muestra solo desde el nivel `deposit_paid` (decisión por defecto, a confirmar) |
 | Móvil | PWA primero; luego app con Expo / React Native |
 | Ingresos | Cobro por publicar o destacar anuncios |

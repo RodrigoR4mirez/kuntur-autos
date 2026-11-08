@@ -6,10 +6,10 @@ Objetivo: que el código se entienda rápido, se pueda cambiar una pieza sin rom
 
 | Pieza | Elección | Dónde vive |
 |---|---|---|
-| Web | Next.js | `apps/web` (Fase 1) |
+| Web | Next.js | `apps/web` (pendiente) |
 | API HTTP | Fastify | `apps/api` |
-| Base de datos | PostgreSQL con Drizzle ORM | `packages/adapters/db-postgres` (Fase 1) |
-| Sesiones | Librería de autenticación en nuestro servidor (por ejemplo Better Auth) | `packages/adapters/auth` (Fase 1) |
+| Base de datos | PostgreSQL con Drizzle ORM | `packages/adapters/db-postgres` (hecho: esquema, migración, repositorios, catálogo inicial) |
+| Sesiones | Librería de autenticación en nuestro servidor (por ejemplo Better Auth) | `packages/adapters/auth` (pendiente) |
 | Validación | Zod | `packages/contracts` |
 | Pruebas | Vitest | junto al código |
 
@@ -39,6 +39,7 @@ La regla: **las dependencias apuntan hacia adentro**. El dominio no sabe que exi
 packages/core/src/
   shared/                  núcleo compartido: ids, dinero, Result, puertos comunes (reloj, ids, avisos, archivos)
   modules/
+    catalog/               catálogo cerrado: marcas, modelos, carrocerías, colores
     listings/              anuncios: ciclo de vida, vehículo, crear borrador, enviar a revisión
     storefront/            vitrina: qué ve cada visitante según su nivel de acceso
     accounts/              usuarios y verificación de identidad (puertos)
@@ -51,11 +52,12 @@ packages/core/src/
       <módulo>/index.ts       API pública del módulo
   in-memory/               implementaciones en memoria y datos de ejemplo (pruebas y desarrollo local)
 packages/contracts/        esquemas Zod de entrada y salida
-packages/adapters/         un paquete por proveedor: system (reloj, UUID); luego db-postgres, payments-culqi...
+packages/adapters/         un paquete por proveedor: system (reloj, UUID), db-postgres (PostgreSQL con Drizzle); luego auth, payments-culqi...
+packages/contract-tests/   suites de contrato: cualquier implementación de un puerto debe pasarlas
 apps/api/src/
   interface/http/          rutas, presentadores, errores
   app.ts                   arma Fastify con los casos de uso
-  composition-root.ts      elige adaptadores
+  composition-root.ts      elige adaptadores: PostgreSQL si hay DATABASE_URL; memoria solo en desarrollo; en producción exige la base
   main.ts                  arranque
 ```
 
@@ -109,16 +111,16 @@ Las excepciones quedan para fallos inesperados. La interfaz traduce cada código
 | Dominio | Reglas e invariantes | Funciones puras, sin dobles | milisegundos |
 | Casos de uso | Flujos y errores | Repositorios en memoria, reloj fijo, ids secuenciales | milisegundos |
 | HTTP | Códigos de respuesta, forma del JSON, que no se filtre el dueño | `app.inject` de Fastify, sin abrir puertos | milisegundos |
-| Adaptadores | Que cumplan el puerto | Pruebas de contrato contra PostgreSQL real en Docker (Fase 1) | segundos |
+| Adaptadores | Que cumplan el puerto | **Suites de contrato** compartidas (`packages/contract-tests`) contra memoria, PostgreSQL en memoria (PGlite) y un PostgreSQL real si hay `DATABASE_URL` (CI). Las pruebas destructivas solo aceptan `localhost` | segundos |
 | Flujos críticos | Registro, publicación, depósito | Playwright (Fase 2) | segundos |
 
-Hoy hay 53 pruebas y corren en menos de un segundo.
+Las pruebas del dominio, los casos de uso, la API y las suites de contrato con PGlite corren en menos de un segundo, sin Docker. El núcleo se mide con umbral de cobertura (90 % líneas, 85 % ramas) en `pnpm test:coverage`.
 
 ## Qué falta
 
-- Adaptador de PostgreSQL con Drizzle y migraciones, con el esquema y los índices de búsqueda.
-- Catálogo de marcas, modelos y versiones.
-- Autenticación (correo, Google, SMS, DNI) detrás de un puerto, y `resolveAccessLevel` leyendo la sesión.
-- Rutas para crear y enviar anuncios, y subida de fotos.
+- Autenticación (correo, Google, SMS, DNI) detrás de un puerto, y `resolveAccessLevel` leyendo la sesión; después, enlazar `listings.owner_id` con la tabla de usuarios.
+- Rutas para crear y enviar anuncios (los casos de uso ya existen) y subida de fotos.
+- Búsqueda con filtros obligatorios y deseables sobre PostgreSQL (el puerto y el índice parcial ya existen).
+- Moderación y panel de administración.
 - `apps/web` con Next.js.
-- La composition root usa hoy repositorios en memoria: sirve para desarrollar, no para producción.
+- Curar el catálogo inicial (versiones, modelos faltantes): hoy es una muestra de 12 marcas y 70 modelos.

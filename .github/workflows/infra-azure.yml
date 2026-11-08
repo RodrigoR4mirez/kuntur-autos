@@ -1,0 +1,57 @@
+# Crea o actualiza la infraestructura de staging en Azure (Container Apps) con Bicep. Se lanza a mano.
+name: Infraestructura Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: Imagen de la API (nombre@digest o nombre:tag publicado en GHCR)
+        required: true
+        default: ghcr.io/rodrigor4mirez/kuntur-autos-api:staging
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-azure
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Aplicar Bicep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Vista previa de cambios (what-if)
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          IMAGE: ${{ inputs.image }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          APP_NAME: ${{ vars.AZURE_CONTAINERAPP_NAME }}
+        run: |
+          az deployment group what-if -g "$RESOURCE_GROUP" \
+            --template-file infra/azure/main.bicep \
+            --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME"
+      - name: Aplicar
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          IMAGE: ${{ inputs.image }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          APP_NAME: ${{ vars.AZURE_CONTAINERAPP_NAME }}
+        run: |
+          az deployment group create -g "$RESOURCE_GROUP" \
+            --template-file infra/azure/main.bicep \
+            --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
+            --query 'properties.outputs' -o json

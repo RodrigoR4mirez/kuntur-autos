@@ -11,19 +11,23 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "boundaries": "node scripts/check-boundaries.mjs",
-    "lint": "pnpm format:check && pnpm boundaries",
+    "lint": "pnpm format:check && pnpm boundaries && pnpm workflows",
     "test": "vitest run",
     "tokens": "pnpm --filter @kuntur/design-tokens build",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "db:migrate": "node packages/adapters/db-postgres/src/cli.ts migrate",
-    "db:seed": "node packages/adapters/db-postgres/src/cli.ts migrate --seed"
+    "db:seed": "node packages/adapters/db-postgres/src/cli.ts migrate --seed",
+    "test:coverage": "vitest run --coverage",
+    "workflows": "node scripts/check-workflows.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",
     "@electric-sql/pglite-socket": "^0.2.18",
     "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.0",
     "prettier": "^3.9.10",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "yaml": "^2.9.1"
   }
 }
