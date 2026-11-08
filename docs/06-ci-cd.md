@@ -23,8 +23,7 @@ Ningún cambio llega a `main` ni a un servidor sin pasar por controles automáti
 |---|---|---|
 | `ci.yml` | Cada pull request. En `main` lo llama el despliegue. | **validate**: tipos, formato, regla de dependencias, política de flujos, pruebas con cobertura contra PostgreSQL real. **image**: construye la imagen Docker y la escanea. **infra**: compila la plantilla Bicep. |
 | `security.yml` | Cada pull request, antes de cada despliegue y cada lunes. | **codeql**: análisis estático de TypeScript. **dependency-review**: bloquea dependencias nuevas con vulnerabilidad alta (solo en PR). **audit**: `pnpm audit` de producción. **secrets**: gitleaks sobre todo el historial. **config-scan**: Trivy sobre archivos, Dockerfile y compose. |
-| `_deploy-app.yml` | Lo llaman staging y producción. | Despliegue reutilizable: migra la base, recuerda la revisión actual, actualiza la imagen, prueba `/health` y `/catalog/brands`, y vuelve atrás si falla. Usa el entorno que se le indica (`staging` o `production`) y sus secretos. |
-| `deploy-staging.yml` | Cada push a `main` y a mano. | CI → seguridad → publica la imagen en GHCR con SBOM y procedencia → escanea la imagen publicada → atesta su origen → migra la base → despliega a Azure Container Apps → prueba de humo → vuelve atrás si falla. |
+| `deploy-staging.yml` | Cada push a `main` y a mano. | Su job `deploy` usa el entorno `staging` y la acción `.github/actions/deploy-app` (migra, actualiza, prueba `/health` y `/catalog/brands`, revierte si falla). | CI → seguridad → publica la imagen en GHCR con SBOM y procedencia → escanea la imagen publicada → atesta su origen → migra la base → despliega a Azure Container Apps → prueba de humo → vuelve atrás si falla. |
 | `deploy-production.yml` | Solo a mano. | Despliega a producción **el mismo digest** que staging probó. Antes comprueba que el commit está en `main` y que el despliegue a staging de ese commit terminó en verde (`scripts/promotion-gate.mjs`). El entorno `production` exige aprobación. |
 | `infra-azure.yml` | A mano. Elige `environment` (staging por defecto). | Crea o actualiza la infraestructura de staging con Bicep (`what-if` y luego aplica). Con el campo `image` vacío (por defecto) **mantiene la versión que ya corre**; no la cambia por la etiqueta `staging`. |
 | `db-migrate.yml` | A mano. | Crea las tablas en la base de staging (Neon), carga el catálogo inicial y comprueba la conexión (`pnpm db:seed` y `pnpm db:check`). Es seguro repetirlo. No necesita Azure. |
@@ -158,6 +157,7 @@ Cifras de fuentes públicas a noviembre de 2026; confírmalas en la página del 
 | Trivy bloquea la imagen | Vulnerabilidad con arreglo en la imagen. Si es del `npm` o `yarn` incluidos en `node:22-slim` (por ejemplo `brace-expansion`, `ip-address`, `pacote`), ya se eliminan en la imagen final porque la API no los usa. Si es otra cosa, actualiza la dependencia o la imagen base |
 | Dependabot propone `node:25-slim` o similar | Solo se usan versiones LTS de Node; `dependabot.yml` ignora saltos de versión mayor de `node`. Cierra ese PR |
 | Aviso amarillo sobre `sslmode` en los registros | Lo emitía la librería `pg`: `sslmode=require` hoy verifica el certificado, pero en su próxima versión mayor dejará de hacerlo. El adaptador lo convierte a `verify-full` (`withStrictSsl`, con pruebas), así que la conexión sigue verificando al servidor y el aviso desaparece |
+| La migración del despliegue falla con `Uso: DATABASE_URL=...` | La variable llegó vacía. Revisa que el secreto `DATABASE_URL` exista en el entorno del job (no en el repositorio) y que el job declare ese entorno |
 | `AADSTS700213: No matching federated identity record` en "Infraestructura Azure" | El subject de la credencial no coincide con el que envía GitHub. Compara el texto de la anotación (*Show more*) con el de la credencial, letra por letra. Si ya coincide, espera unos minutos (Azure tarda en aplicar cambios) y vuelve a ejecutar |
 | `Login failed` en el flujo, sin `AADSTS` | Falta una variable `AZURE_*` o el valor tiene espacios |
 | Mensaje "No valid subscriptions found" en Cloud Shell | La cuenta no tiene una suscripción activa. Hay que crear una de pago por uso (ver el paso 1 de la guía) |
@@ -165,7 +165,7 @@ Cifras de fuentes públicas a noviembre de 2026; confírmalas en la página del 
 
 ## Producción
 
-Staging y producción usan el mismo camino y las mismas comprobaciones; lo que cambia es el entorno de GitHub, la base y el grupo de recursos.
+Staging y producción usan la misma acción de despliegue (`.github/actions/deploy-app`). Cada job declara su entorno y recibe `DATABASE_URL` de ese entorno; no se usan flujos reutilizables para esto, porque el secreto del entorno no llega igual a un flujo reutilizable (incidente de la ejecución #14); lo que cambia es el entorno de GitHub, la base y el grupo de recursos.
 
 | | Staging | Producción |
 |---|---|---|

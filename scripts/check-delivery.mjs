@@ -108,14 +108,8 @@ export function checkDelivery(root) {
     );
   }
 
-  // 5. Entornos: cada despliegue usa su entorno de GitHub, y staging es el valor por defecto
-  //    en los flujos manuales (así nadie toca producción por accidente).
-  const reusable = parse(read('.github/workflows/_deploy-app.yml'));
-  const reusableEnv = reusable.jobs?.deploy?.environment;
-  const reusableEnvName = typeof reusableEnv === 'object' ? reusableEnv.name : reusableEnv;
-  if (reusableEnvName !== '${{ inputs.environment }}') {
-    add('_deploy-app.yml: el job deploy debe usar el entorno indicado por inputs.environment');
-  }
+  // 5. Entornos: cada despliegue corre en su propio entorno de GitHub, usa la acción compartida
+  //    y pasa el secreto DATABASE_URL de ese entorno (no desde un flujo reutilizable).
   const callers = {
     'deploy-staging.yml': { env: 'staging', rg: 'rg-kuntur-staging', app: 'kuntur-api-staging' },
     'deploy-production.yml': {
@@ -126,12 +120,18 @@ export function checkDelivery(root) {
   };
   for (const [file, want] of Object.entries(callers)) {
     const job = parse(read(join('.github', 'workflows', file))).jobs?.deploy;
-    const w = job?.with ?? {};
-    if (job?.uses !== './.github/workflows/_deploy-app.yml')
-      add(`${file}: el job deploy debe llamar a _deploy-app.yml`);
-    if (w.environment !== want.env) add(`${file}: el entorno debe ser "${want.env}"`);
+    const envName = typeof job?.environment === 'object' ? job.environment.name : job?.environment;
+    if (envName !== want.env) add(`${file}: el job deploy debe declarar el entorno "${want.env}"`);
+    const step = (job?.steps ?? []).find((st) => st.uses === './.github/actions/deploy-app');
+    if (!step) add(`${file}: el job deploy debe usar la acción ./.github/actions/deploy-app`);
+    const w = step?.with ?? {};
     if (w.resource_group !== want.rg || w.app_name !== want.app)
       add(`${file}: grupo o app inesperados para ${want.env}`);
+    if (w.database_url !== '${{ secrets.DATABASE_URL }}')
+      add(`${file}: database_url debe venir de secrets.DATABASE_URL del entorno`);
+  }
+  if (!existsSync(join(root, '.github', 'actions', 'deploy-app', 'action.yml'))) {
+    add('falta la acción .github/actions/deploy-app/action.yml');
   }
   const infraDoc = parse(read('.github/workflows/infra-azure.yml'));
   const infraEnv = infraDoc.on?.workflow_dispatch?.inputs?.environment;
