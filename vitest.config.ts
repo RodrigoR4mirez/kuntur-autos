@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     include: ['packages/**/*.test.ts', 'apps/**/*.test.ts', 'scripts/**/*.test.ts'],
     exclude: ['**/node_modules/**'],
+    // Las pruebas de integración calculan contraseñas con hash seguro: en los runners de GitHub tardan más que en local.
+    testTimeout: 30000,
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],

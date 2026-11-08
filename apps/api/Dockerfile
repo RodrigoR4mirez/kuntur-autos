@@ -24,6 +24,10 @@ RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack 
     /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
     /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
 COPY --from=deps /app/node_modules ./node_modules
+# drizzle-kit (dependencia de better-auth) arrastra esbuild, con un binario de Go con vulnerabilidades.
+# La API nunca usa drizzle-kit ni esbuild en ejecución (las migraciones usan drizzle-orm), así que se quitan.
+RUN find /app/node_modules/.pnpm -maxdepth 1 -name '@esbuild+*' -exec rm -rf {} + \
+ && find /app/node_modules/.pnpm -maxdepth 1 -name 'drizzle-kit@*' -exec rm -rf {} + || true
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
 COPY --from=deps /app/packages/adapters/system/node_modules ./packages/adapters/system/node_modules

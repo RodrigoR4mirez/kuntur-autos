@@ -1,0 +1,9 @@
+# Configuración de gitleaks para este repositorio. Hereda las reglas por defecto.
+[extend]
+useDefault = true
+
+# Contraseñas de PRUEBA que usan las pruebas de integración de autenticación.
+# Son valores ficticios y están solo en archivos de prueba; no dan acceso a nada.
+[allowlist]
+description = "Contraseñas ficticias de las pruebas de autenticación"
+regexes = ['''una-clave-larga-123''', '''otra-clave-123''']

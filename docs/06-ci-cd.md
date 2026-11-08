@@ -152,6 +152,9 @@ Cifras de fuentes públicas a noviembre de 2026; confírmalas en la página del 
 | Azure no puede descargar la imagen | El paquete de GHCR es privado: hazlo público o configura credenciales de registro |
 | `pnpm workflows` falla | Una acción sin SHA, un job sin timeout, o un `${{ }}` dentro de `run` |
 | CI falla en `Validar` con la base | Las pruebas destructivas solo aceptan `localhost`; revisa `DATABASE_URL` del job |
+| Trivy marca un binario `esbuild` (Go) en la imagen | Llega como dependencia de `drizzle-kit` (vía `better-auth`). El Dockerfile lo quita de la imagen final porque la API no lo usa; las migraciones usan `drizzle-orm`. Si reaparece otra herramienta de desarrollo, quítala igual en la etapa final |
+| gitleaks marca una contraseña en `*.test.ts` | Las contraseñas de prueba están permitidas en `.gitleaks.toml` (solo esas dos cadenas). Cualquier otro secreto sigue bloqueado |
+| Una prueba de integración da `Test timed out` | Las pruebas de autenticación calculan contraseñas con hash seguro; el límite es 30 s (`vitest.config.ts`) |
 | Trivy bloquea la imagen | Vulnerabilidad con arreglo en la imagen. Si es del `npm` o `yarn` incluidos en `node:22-slim` (por ejemplo `brace-expansion`, `ip-address`, `pacote`), ya se eliminan en la imagen final porque la API no los usa. Si es otra cosa, actualiza la dependencia o la imagen base |
 | Dependabot propone `node:25-slim` o similar | Solo se usan versiones LTS de Node; `dependabot.yml` ignora saltos de versión mayor de `node`. Cierra ese PR |
 | Aviso amarillo sobre `sslmode` en los registros | Lo emitía la librería `pg`: `sslmode=require` hoy verifica el certificado, pero en su próxima versión mayor dejará de hacerlo. El adaptador lo convierte a `verify-full` (`withStrictSsl`, con pruebas), así que la conexión sigue verificando al servidor y el aviso desaparece |
