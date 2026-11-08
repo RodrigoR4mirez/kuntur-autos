@@ -13,6 +13,7 @@ La documentación en `docs/` es parte del producto: otros proyectos y personas d
 | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | Una decisión de producto, negocio o tecnología                          | `docs/00-decisiones.md` (tabla y pendientes)                                              |
 | Niveles de acceso, proceso de compra, búsqueda, seguridad del producto  | `docs/01-arquitectura.md`                                                                 |
+| Rutas, contratos, errores o autenticación de la API                     | `docs/08-api.md` (tabla de rutas) y `packages/contracts`                                  |
 | Estructura del código, capas, patrones, reglas de dependencias, pruebas | `docs/05-arquitectura-limpia.md`, `CLAUDE.md`, `scripts/check-boundaries.mjs` y su prueba |
 | Flujos de GitHub, Dockerfile, infraestructura, secretos, despliegue     | `docs/06-ci-cd.md`                                                                        |
 | Proveedor de hosting o base de datos                                    | `docs/07-hosting.md` y `docs/06-ci-cd.md`                                                 |

@@ -5,7 +5,7 @@ Modelos: **Opus 5.5** (`claude-opus-5-5`) para arquitectura, seguridad y revisi�
 ## Estado actual (2026-11-08)
 
 - **Fase 0**: completada.
-- **Fase 1** (en curso): hecho: arquitectura limpia, vitrina con niveles de acceso, catálogo, PostgreSQL con migraciones y CI/CD con seguridad y despliegue a staging (por configurar y ejecutar). Falta: autenticación, publicar anuncios con fotos, búsqueda con filtros, moderación y la web con Next.js.
+- **Fase 1** (en curso): hecho: arquitectura limpia, vitrina con niveles de acceso, catálogo, PostgreSQL con migraciones, CI/CD con seguridad (ejecutado en GitHub; falta configurar Azure para desplegar), sesiones por puerto y rutas para publicar y enviar a revisión. Falta: proveedor real de autenticación (Better Auth, SMS, DNI), fotos, búsqueda con filtros, moderación y la web con Next.js.
 - Fases 2 a 5: sin empezar.
 
 ## Fase 0 — Cimientos

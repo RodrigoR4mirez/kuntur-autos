@@ -2,6 +2,8 @@
 // Se importan como '@kuntur/core/in-memory'. No forman parte de la API de producción del núcleo.
 export * from './in-memory-listing-repository.ts';
 export * from './in-memory-catalog-repository.ts';
+export * from './in-memory-appointment-repository.ts';
+export * from './static-token-session-resolver.ts';
 export * from './fixed-clock.ts';
 export * from './sequential-ids.ts';
 export * from './fixtures.ts';

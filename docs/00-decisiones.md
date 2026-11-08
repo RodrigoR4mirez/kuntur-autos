@@ -25,6 +25,8 @@ Fuente: las respuestas del dueño del proyecto a la ronda de preguntas. Fecha: 2
 | Entornos | Staging automático en cada merge a `main`; producción después, con aprobación manual |
 | CI/CD | GitHub Actions: CI, seguridad (CodeQL, dependencias, secretos, Trivy), despliegue con OIDC. Ver `06-ci-cd.md` |
 | Documentación | Viva y obligatoria: se actualiza en el mismo commit que el cambio; las indicaciones del dueño pasan a `CLAUDE.md` o a skills |
+| Publicar anuncios | Cualquier persona con sesión puede publicar; el dueño sale siempre de la sesión y el anuncio nace como borrador que pasa por revisión |
+| Autenticación (estado) | Puerto `SessionResolver` hecho; proveedor real (Better Auth) pendiente. En producción todos son anónimos hasta conectarlo; los tokens de desarrollo no funcionan en producción |
 | Plano del producto | La placa se muestra solo desde el nivel `deposit_paid` (decisión por defecto, a confirmar) |
 | Móvil | PWA primero; luego app con Expo / React Native |
 | Ingresos | Cobro por publicar o destacar anuncios |

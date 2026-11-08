@@ -1,15 +1,25 @@
 import {
+  createDraftListing,
+  determineAccessLevel,
   getCatalogOptions,
   getListingView,
   listBrands,
   listModelsOfBrand,
   money,
+  submitListingForReview,
   type CatalogRepository,
   type ListingId,
   type ListingRepository,
+  type SessionResolver,
   type UserId,
 } from '@kuntur/core';
-import { InMemoryCatalogRepository, InMemoryListingRepository } from '@kuntur/core/in-memory';
+import {
+  InMemoryAppointmentRepository,
+  InMemoryCatalogRepository,
+  InMemoryListingRepository,
+  StaticTokenSessionResolver,
+} from '@kuntur/core/in-memory';
+import { NullSessionResolver, SystemClock, UuidIdGenerator } from '@kuntur/adapter-system';
 import {
   connectPostgres,
   PostgresCatalogRepository,
@@ -37,6 +47,10 @@ export async function createWiring(options: WiringOptions): Promise<Wiring> {
   let listings: ListingRepository;
   let catalog: CatalogRepository;
   let close = async () => {};
+  // Aún no existe el repositorio de citas en PostgreSQL (llega con el depósito, Fase 2). Mientras
+  // no se puedan crear citas, un repositorio vacío da el resultado correcto: nadie tiene depósito pagado.
+  const appointments = new InMemoryAppointmentRepository();
+  const sessions = createSessionResolver(options.isProduction);
 
   if (options.databaseUrl) {
     const connection = connectPostgres(options.databaseUrl);
@@ -55,12 +69,32 @@ export async function createWiring(options: WiringOptions): Promise<Wiring> {
   return {
     close,
     useCases: {
+      resolveSession: (token) => sessions.resolve(token),
+      determineAccessLevel: determineAccessLevel({ appointments }),
+      createDraftListing: createDraftListing({
+        listings,
+        ids: new UuidIdGenerator(),
+        clock: new SystemClock(),
+      }),
+      submitListingForReview: submitListingForReview({ listings }),
       getListingView: getListingView({ listings }),
       listBrands: listBrands({ catalog }),
       listModelsOfBrand: listModelsOfBrand({ catalog }),
       getCatalogOptions: getCatalogOptions({ catalog }),
     },
   };
+}
+
+/**
+ * Producción: sin proveedor de autenticación real todavía, nadie tiene sesión (todos anónimos).
+ * Desarrollo: tokens fijos para probar las rutas protegidas con curl. Nunca llegan a producción.
+ */
+function createSessionResolver(isProduction: boolean): SessionResolver {
+  if (isProduction) return new NullSessionResolver();
+  return new StaticTokenSessionResolver({
+    'dev-seller': { userId: 'demo-owner' as UserId, role: 'seller' },
+    'dev-buyer': { userId: 'demo-buyer' as UserId, role: 'buyer' },
+  });
 }
 
 async function seedDemoListing(listings: ListingRepository): Promise<void> {

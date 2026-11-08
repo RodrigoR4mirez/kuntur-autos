@@ -41,8 +41,8 @@ packages/core/src/
   modules/
     catalog/               catálogo cerrado: marcas, modelos, carrocerías, colores
     listings/              anuncios: ciclo de vida, vehículo, crear borrador, enviar a revisión
-    storefront/            vitrina: qué ve cada visitante según su nivel de acceso
-    accounts/              usuarios y verificación de identidad (puertos)
+    storefront/            vitrina: qué ve cada visitante según su nivel de acceso y cómo se calcula (determineAccessLevel)
+    accounts/              usuarios, sesión y su puerto SessionResolver, verificación de identidad (puertos)
     appointments/          citas con el asesor (modelo y puerto)
     payments/              pasarela de pagos (puerto)
     search/                búsqueda y match (puerto)
@@ -118,9 +118,9 @@ Las pruebas del dominio, los casos de uso, la API y las suites de contrato con P
 
 ## Qué falta
 
-- Autenticación (correo, Google, SMS, DNI) detrás de un puerto, y `resolveAccessLevel` leyendo la sesión; después, enlazar `listings.owner_id` con la tabla de usuarios.
-- Rutas para crear y enviar anuncios (los casos de uso ya existen) y subida de fotos.
-- Búsqueda con filtros obligatorios y deseables sobre PostgreSQL (el puerto y el índice parcial ya existen).
-- Moderación y panel de administración.
+- **Proveedor real de autenticación** (Better Auth: correo, Google, SMS) implementando `SessionResolver` en `packages/adapters/auth`, y enlazar `listings.owner_id` con la tabla de usuarios. Hasta entonces, en producción todos son anónimos (ver `08-api.md`).
+- **Proveedores reales de SMS y de validación de DNI** detrás de los puertos `Notifier` e `IdentityVerifier` (hace falta elegir proveedor y crear cuenta).
+- Repositorio de citas en PostgreSQL (llega con el depósito, Fase 2); hoy `determineAccessLevel` usa uno en memoria vacío, lo que es correcto mientras no se puedan crear citas.
+- Subida de fotos, búsqueda con filtros sobre PostgreSQL (el puerto y el índice parcial ya existen), moderación y panel de administración.
 - `apps/web` con Next.js.
 - Curar el catálogo inicial (versiones, modelos faltantes): hoy es una muestra de 12 marcas y 70 modelos.

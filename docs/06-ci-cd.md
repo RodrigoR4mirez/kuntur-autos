@@ -120,15 +120,19 @@ Verificado antes de subirlo:
 - `pnpm workflows` pasa; sus reglas tienen pruebas.
 - Los SHA se resolvieron desde los repositorios oficiales y se leyeron los `action.yml` para confirmar las entradas usadas.
 - La migración, el catálogo y la API funcionan contra PostgreSQL con el driver `pg` real.
-- Los pasos del Dockerfile se simularon a mano (instalación de producción y arranque).
 - `pnpm audit` sin vulnerabilidades al momento de escribir esto.
 
-**No verificado** (se comprueba en la primera ejecución en GitHub):
-- Los flujos todavía no corrieron en GitHub Actions.
-- La imagen Docker no se construyó aquí (no hay servicio Docker en esta sesión).
-- La plantilla Bicep no se compiló aquí; el job `infra` de CI la valida. No se desplegó nada a Azure.
-- Hallazgos de CodeQL, Trivy y gitleaks: se conocerán en la primera corrida.
-- Disponibilidad de Container Apps en Brazil South y el comportamiento de GHCR con paquetes públicos.
+Verificado en GitHub Actions (según la revisión de la pestaña Actions que hizo el dueño; yo no tengo acceso a esa pestaña):
+- CI, CodeQL, auditoría, gitleaks, escaneo de configuración y validación de Bicep pasaron.
+- La imagen Docker se construye. El primer escaneo de Trivy falló por `brace-expansion`, `ip-address` y `pacote`, que son internos del `npm` de `node:22-slim`; se corrigió quitando npm, npx, corepack y yarn de la imagen final, y el despliegue #2 (`7d67526`) pasó completo.
+- El paquete `kuntur-autos-api` de GHCR es público.
+- El despliegue a Azure se omitió con el aviso "Despliegue no configurado".
+
+**No verificado todavía:**
+- Nada se ha desplegado a Azure: la plantilla Bicep compila en CI, pero no se aplicó, y los pasos de configuración de Azure y Neon no se han probado en una cuenta real.
+- Disponibilidad de Container Apps en Brazil South.
+- La prueba de humo y la reversión automática solo se verán en el primer despliegue real.
+- Los comandos `az` de este documento no se ejecutaron.
 
 ## Costos y límites
 

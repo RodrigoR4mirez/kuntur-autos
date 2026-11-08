@@ -11,11 +11,12 @@ Marketplace de autos de segunda mano para todo el Perú. Web (PWA) primero; lueg
 - [`docs/05-arquitectura-limpia.md`](docs/05-arquitectura-limpia.md): capas, módulos, patrones y cómo agregar una funcionalidad.
 - [`docs/06-ci-cd.md`](docs/06-ci-cd.md): integración y entrega continua, seguridad, despliegue y configuración única.
 - [`docs/07-hosting.md`](docs/07-hosting.md): dónde se despliega para pruebas y por qué.
+- [`docs/08-api.md`](docs/08-api.md): rutas HTTP, autenticación, niveles de acceso y errores.
 - [`docs/04-marca.md`](docs/04-marca.md): marca, colores, tipografía y merchandise.
 - [`docs/prompts/00-master-prompt.md`](docs/prompts/00-master-prompt.md): prompt para iniciar cada sesión.
 
 ## Estado
-**Fase 0 completada** y avance de la Fase 1: arquitectura limpia con módulos, vitrina con niveles de acceso, catálogo, adaptador de PostgreSQL con migraciones, y CI/CD con seguridad y despliegue a staging (pendiente de configurar la cuenta de Azure y de ejecutarse por primera vez en GitHub). Falta de la Fase 1: autenticación, publicar anuncios con fotos, búsqueda con filtros, moderación y la web con Next.js.
+**Fase 0 completada** y avance de la Fase 1: arquitectura limpia con módulos, vitrina con niveles de acceso, catálogo, adaptador de PostgreSQL con migraciones, y CI/CD con seguridad y despliegue a staging (pendiente de configurar la cuenta de Azure y de ejecutarse por primera vez en GitHub). También hay sesiones por puerto, publicar y enviar anuncios a revisión (con dueño tomado de la sesión) y niveles de acceso por depósito. Falta de la Fase 1: el proveedor real de autenticación (Better Auth, SMS y DNI), fotos, búsqueda con filtros, moderación y la web con Next.js.
 
 ## Cómo trabajar
 Requisitos: Node 22 o superior y pnpm 10.
