@@ -80,31 +80,13 @@ Antes de usar una versión nueva, lee sus entradas (`action.yml` en ese SHA). De
 ### Base de datos (Neon)
 Crear un proyecto en Neon (plan gratuito), copiar la cadena de conexión (incluye `sslmode=require`) y guardarla como secreto `DATABASE_URL` del entorno `staging`. Una rama de Neon por entorno permite aislar staging de pruebas.
 
-### Azure (una vez, desde tu terminal)
-```bash
-az login
-az account set --subscription <ID-DE-TU-SUSCRIPCIÓN>
-az provider register --namespace Microsoft.App
-az provider register --namespace Microsoft.OperationalInsights
-az group create -n rg-kuntur-staging -l brazilsouth
+### Azure (una vez, desde Azure Cloud Shell)
+No hace falta instalar nada: Azure trae una terminal dentro del navegador (**Cloud Shell**, el icono `>_` de la barra superior de https://portal.azure.com; elige **Bash** y, si te lo ofrece, continúa **sin cuenta de almacenamiento**).
 
-# Identidad para GitHub con OIDC (sin contraseñas)
-APP_ID=$(az ad app create --display-name kuntur-github-staging --query appId -o tsv)
-az ad sp create --id "$APP_ID"
-az ad app federated-credential create --id "$APP_ID" --parameters '{
-  "name": "github-staging",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:RodrigoR4mirez/kuntur-autos:environment:staging",
-  "audiences": ["api://AzureADTokenExchange"]
-}'
-SUB=$(az account show --query id -o tsv)
-az role assignment create --assignee "$APP_ID" --role Contributor \
-  --scope "/subscriptions/$SUB/resourceGroups/rg-kuntur-staging"
+El script `infra/azure/setup.sh` hace todo lo de esta sección y es seguro repetirlo: comprueba que la suscripción esté activa, registra los servicios, crea el grupo de recursos `rg-kuntur-staging`, crea una identidad para GitHub (OIDC, sin contraseñas) limitada a este repositorio, al entorno `staging` y a ese grupo, y al final imprime los cinco valores `AZURE_*` para guardarlos como **variables** del repositorio. Se puede cambiar con las variables `REPO`, `RG`, `LOCATION`, `IDENTITY_NAME` y `CONTAINERAPP_NAME`.
 
-echo "AZURE_CLIENT_ID=$APP_ID"
-echo "AZURE_TENANT_ID=$(az account show --query tenantId -o tsv)"
-echo "AZURE_SUBSCRIPTION_ID=$SUB"
-```
+Probado solo con un `az` simulado (flujo de primera vez, repetición y suscripción desactivada); **no se ha ejecutado contra una cuenta real de Azure**. Si falla con "Insufficient privileges", la cuenta no puede crear registros de aplicación en su directorio. Si la región `brazilsouth` no admite Container Apps, ejecútalo con `LOCATION=eastus2`.
+
 Luego, en el portal de Azure, **Cost Management → Budgets**: crear un presupuesto mensual bajo (por ejemplo 5 USD) con alertas al 50 %, 80 % y 100 %. Es tu protección ante cobros inesperados. Verifica que Container Apps esté disponible en la región elegida; si no, usa otra.
 
 ### Orden de la primera vez
