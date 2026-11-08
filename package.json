@@ -14,9 +14,13 @@
     "lint": "pnpm format:check && pnpm boundaries",
     "test": "vitest run",
     "tokens": "pnpm --filter @kuntur/design-tokens build",
-    "check": "pnpm typecheck && pnpm lint && pnpm test"
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "db:migrate": "node packages/adapters/db-postgres/src/cli.ts migrate",
+    "db:seed": "node packages/adapters/db-postgres/src/cli.ts migrate --seed"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
+    "@electric-sql/pglite-socket": "^0.2.18",
     "@types/node": "^26.6.6",
     "prettier": "^3.9.10",
     "typescript": "^7.0.2",

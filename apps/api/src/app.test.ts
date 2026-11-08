@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getListingView } from '@kuntur/core';
-import { InMemoryListingRepository, makeListing, makeVehicle, OWNER } from '@kuntur/core/in-memory';
+import { getCatalogOptions, getListingView, listBrands, listModelsOfBrand } from '@kuntur/core';
+import {
+  InMemoryCatalogRepository,
+  InMemoryListingRepository,
+  makeListing,
+  makeVehicle,
+  OWNER,
+} from '@kuntur/core/in-memory';
 import { buildApp } from './app.ts';
 
 let listings: InMemoryListingRepository;
@@ -9,7 +15,13 @@ let app: ReturnType<typeof buildApp>;
 beforeEach(async () => {
   listings = new InMemoryListingRepository();
   await listings.save(makeListing(), makeVehicle());
-  app = buildApp({ getListingView: getListingView({ listings }) });
+  const catalog = new InMemoryCatalogRepository();
+  app = buildApp({
+    getListingView: getListingView({ listings }),
+    listBrands: listBrands({ catalog }),
+    listModelsOfBrand: listModelsOfBrand({ catalog }),
+    getCatalogOptions: getCatalogOptions({ catalog }),
+  });
 });
 
 describe('health', () => {
@@ -61,5 +73,39 @@ describe('unknown routes', () => {
     const res = await app.inject({ method: 'GET', url: '/nope' });
     expect(res.statusCode).toBe(404);
     expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
+  });
+});
+
+describe('catalog', () => {
+  it('lists brands', async () => {
+    const res = await app.inject({ method: 'GET', url: '/catalog/brands' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().brands.map((b: { name: string }) => b.name)).toEqual([
+      'Toyota',
+      'Kia',
+      'Hyundai',
+    ]);
+  });
+
+  it('lists the models of one brand', async () => {
+    const res = await app.inject({ method: 'GET', url: '/catalog/brands/2/models' });
+    expect(res.json().models).toEqual([{ id: 20, brandId: 2, name: 'Rio' }]);
+  });
+
+  it('answers 404 for an unknown brand and 400 for a malformed id', async () => {
+    expect(
+      (await app.inject({ method: 'GET', url: '/catalog/brands/999/models' })).statusCode,
+    ).toBe(404);
+    expect(
+      (await app.inject({ method: 'GET', url: '/catalog/brands/abc/models' })).statusCode,
+    ).toBe(400);
+    expect((await app.inject({ method: 'GET', url: '/catalog/brands/-1/models' })).statusCode).toBe(
+      400,
+    );
+  });
+
+  it('returns body types and colors', async () => {
+    const res = await app.inject({ method: 'GET', url: '/catalog/options' });
+    expect(res.json()).toMatchObject({ bodyTypes: expect.any(Array), colors: expect.any(Array) });
   });
 });

@@ -1,5 +1,6 @@
 export * from './shared/index.ts';
 export * from './modules/accounts/index.ts';
+export * from './modules/catalog/index.ts';
 export * from './modules/listings/index.ts';
 export * from './modules/storefront/index.ts';
 export * from './modules/appointments/index.ts';

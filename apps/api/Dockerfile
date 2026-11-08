@@ -7,6 +7,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/core/package.json packages/core/
 COPY packages/contracts/package.json packages/contracts/
 COPY packages/adapters/system/package.json packages/adapters/system/
+COPY packages/adapters/db-postgres/package.json packages/adapters/db-postgres/
 COPY packages/design-tokens/package.json packages/design-tokens/
 COPY apps/api/package.json apps/api/
 RUN pnpm install --frozen-lockfile --prod --filter @kuntur/api...
@@ -18,10 +19,12 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
 COPY --from=deps /app/packages/adapters/system/node_modules ./packages/adapters/system/node_modules
+COPY --from=deps /app/packages/adapters/db-postgres/node_modules ./packages/adapters/db-postgres/node_modules
 COPY package.json ./
 COPY packages/core packages/core
 COPY packages/contracts packages/contracts
 COPY packages/adapters/system packages/adapters/system
+COPY packages/adapters/db-postgres packages/adapters/db-postgres
 COPY apps/api apps/api
 USER node
 EXPOSE 3000

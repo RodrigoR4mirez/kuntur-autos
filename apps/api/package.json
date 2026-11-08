@@ -8,6 +8,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@kuntur/adapter-db-postgres": "workspace:*",
     "@kuntur/adapter-system": "workspace:*",
     "@kuntur/contracts": "workspace:*",
     "@kuntur/core": "workspace:*",
