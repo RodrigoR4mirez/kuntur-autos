@@ -70,20 +70,98 @@ Qué pasa según la configuración:
 | Desarrollo sin `AUTH_SECRET` | Tokens fijos `dev-seller` y `dev-buyer` (nunca en producción) |
 | Desarrollo con `AUTH_SECRET` y sin SMTP | Los correos se imprimen en el registro (con el enlace de verificación) |
 
-## Configurar Google (una vez, lo haces tú)
+## Guía paso a paso (lo haces tú, una sola vez)
 
-1. En la consola de Google Cloud (gratis), crea un proyecto y configura la **pantalla de consentimiento de OAuth** con el nombre Kuntur Autos y tu correo de soporte.
-2. En **Credenciales**, crea un **ID de cliente OAuth** de tipo *Aplicación web*.
-3. En **URI de redireccionamiento autorizados** agrega `<AUTH_BASE_URL>/auth/callback/google`. Para desarrollo: `http://localhost:3000/auth/callback/google`. Debe coincidir exactamente.
-4. Copia el ID y el secreto: `GOOGLE_CLIENT_ID` como variable del repositorio y `GOOGLE_CLIENT_SECRET` como secreto del entorno `staging` de GitHub.
-5. Mientras la app esté en modo de prueba, solo entran las cuentas que agregues como usuarios de prueba; para abrirla al público hay que publicar la pantalla de consentimiento (Google puede pedir verificación).
+Nunca pegues secretos en el chat, en un commit ni en un issue. Van en un archivo `.env` local (que Git ignora) y en los **secretos** de GitHub.
 
-## Configurar el correo (una vez, lo haces tú)
+### Dónde se guarda cada valor en GitHub
 
-Cualquier proveedor SMTP sirve; cambiar de uno a otro es cambiar `SMTP_URL`.
-- **Resend**: 3.000 correos al mes y 100 al día gratis ([comparativa](https://agentdeals.dev/email-comparison-2026)).
-- **Brevo**: la mayoría de fuentes dicen 300 correos al día gratis, pero otra lista 100 al día: confírmalo en su página.
-- Para enviar a cualquier persona con buena entrega, los proveedores suelen exigir un **dominio propio verificado** (registros SPF y DKIM). Aún no hay dominio; eso está por verificar con el proveedor que elijas.
+| Tipo | Dónde | Cómo |
+|---|---|---|
+| **Secreto del entorno** | Repositorio → Settings → Environments → `staging` | Si no existe, *New environment* con el nombre `staging`. Luego *Add environment secret*: nombre y valor |
+| **Variable del repositorio** | Repositorio → Settings → Secrets and variables → Actions → pestaña **Variables** | *New repository variable*: nombre y valor |
+
+### Paso 1. Secreto de sesiones (`AUTH_SECRET`)
+1. En una terminal, genera un valor aleatorio:
+   ```bash
+   openssl rand -base64 48
+   ```
+   Si no tienes `openssl` (por ejemplo en Windows) y tienes Node:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
+   ```
+2. Copia el resultado (unos 64 caracteres).
+3. Guárdalo como **secreto del entorno `staging`** con el nombre `AUTH_SECRET`.
+4. Para probar en tu computadora, ponlo también en tu `.env` (copia `.env.example`): `AUTH_SECRET=...`.
+5. Si algún día lo cambias, las sesiones activas dejan de ser válidas y la gente tendrá que iniciar sesión de nuevo. Usa uno distinto para producción.
+
+### Paso 2. Google (`GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`)
+Es gratis. Las pantallas de Google cambian de nombre con frecuencia; si algo no coincide, busca "Google Auth Platform" en el buscador de la consola.
+1. Entra a https://console.cloud.google.com con la cuenta de Google que será la dueña del proyecto.
+2. En la barra superior abre el selector de proyectos → **Nuevo proyecto** → nombre `kuntur-autos` → **Crear**. Asegúrate de que quede seleccionado.
+3. En el buscador de arriba escribe **Google Auth Platform** y ábrelo. Si es la primera vez, pulsa **Comenzar**.
+4. Completa el asistente: nombre de la aplicación `Kuntur Autos`, correo de asistencia (el tuyo), público **Externo**, correo de contacto, acepta la política y **Crear**.
+5. Menú **Público (Audience)**: mientras la app esté en modo *Testing*, solo pueden entrar las cuentas que agregues en **Usuarios de prueba** (**+ Add users**). Agrega tu Gmail y el de quien vaya a probar.
+6. Menú **Clientes (Clients)** → **Crear cliente**:
+   - Tipo de aplicación: **Aplicación web**.
+   - Nombre: `Kuntur Autos staging`.
+   - **Orígenes de JavaScript autorizados**: déjalo vacío (el inicio de sesión lo hace nuestro servidor).
+   - **URI de redireccionamiento autorizados** → **Agregar URI**: `http://localhost:3000/auth/callback/google` (para probar en tu computadora).
+   - **Crear**.
+7. Google muestra el **ID de cliente** y el **secreto del cliente**. **Cópialos ahora**: según las guías, el secreto solo se muestra al crearlo (si lo pierdes, creas otro).
+8. Guárdalos: `GOOGLE_CLIENT_ID` como **variable del repositorio**, `GOOGLE_CLIENT_SECRET` como **secreto del entorno `staging`**, y ambos en tu `.env` local.
+9. Cuando exista la dirección pública de la API (la imprime el flujo **Infraestructura Azure** como `googleRedirectUri`), vuelve a **Clientes**, abre el cliente y agrega ese URI: `https://<tu-api>/auth/callback/google`.
+10. Reglas del URI: debe coincidir **exactamente** (mayúsculas, puerto, sin barra final); `https` salvo `localhost`; sin comodines. Si no, Google responde `redirect_uri_mismatch`.
+11. Para abrirlo al público: **Público → Publicar aplicación**. Con permisos básicos (correo y perfil) normalmente no pide una verificación larga, pero confírmalo en la consola.
+
+Fuentes de los pasos y reglas: [guía de la nueva interfaz](https://var.gg/en/blog/gcp-oauth-consent-client-id), [ayuda de Google Cloud](https://support.google.com/cloud/answer/15549257).
+
+### Paso 3. Correo (`SMTP_URL` y `MAIL_FROM`)
+Sirve cualquier proveedor SMTP. Con la dirección `no-responder@...` que uses, el proveedor exige que seas dueño de ese remitente; para enviar a cualquier persona suele hacer falta un **dominio propio verificado**. Mientras no tengas dominio, puedes probar enviando solo a tu propio correo.
+
+**Opción A: Resend (recomendada para empezar).** Plan gratis: 3.000 correos al mes y 100 al día.
+1. Crea la cuenta en https://resend.com.
+2. **API Keys** → **Create API Key** → nombre `kuntur-staging`, permiso **Sending access** → cópiala (se muestra una sola vez).
+3. Datos SMTP de Resend ([documentación](https://resend.com/docs/send-with-smtp)): servidor `smtp.resend.com`, puerto `465` (TLS directo), usuario `resend`, contraseña = tu API key.
+4. Arma la URL con el usuario y la clave codificados (evita que un carácter especial la rompa):
+   ```bash
+   node -e "console.log('smtps://'+encodeURIComponent('resend')+':'+encodeURIComponent('TU_API_KEY')+'@smtp.resend.com:465')"
+   ```
+5. `MAIL_FROM` para probar: `Kuntur Autos <onboarding@resend.dev>`. Esa dirección de pruebas, según mi conocimiento general y no lo verifiqué, solo entrega al correo con el que abriste la cuenta de Resend: confírmalo en su documentación.
+6. Para usuarios reales: **Domains → Add Domain**, copia los registros DNS (SPF y DKIM) que te muestra al panel de tu registrador de dominio y espera a que diga *Verified*. Luego `MAIL_FROM` pasa a `Kuntur Autos <no-responder@tudominio.pe>`.
+
+**Opción B: Brevo.** Plan gratis: 300 correos al día según la mayoría de fuentes (confírmalo).
+1. Crea la cuenta en https://www.brevo.com.
+2. Menú de tu cuenta (arriba a la derecha) → **SMTP & API** → pestaña **SMTP**: ahí ves el servidor `smtp-relay.brevo.com`, el puerto y tu **login**.
+3. **Generate a new SMTP key**, ponle un nombre y cópiala.
+4. Agrega y verifica un remitente en la sección de remitentes de Brevo (te envían un código al correo). Si exige dominio propio, no lo verifiqué: pregúntalo en su ayuda.
+5. URL: `smtps://LOGIN:CLAVE@smtp-relay.brevo.com:465`, codificando `LOGIN` y `CLAVE` como en el paso 4 de Resend.
+6. Una persona reportó que Brevo daba tiempo de espera agotado desde un servicio en la nube; pruébalo desde Azure antes de depender de él.
+
+**Guardar:** `SMTP_URL` como **secreto del entorno `staging`**; `MAIL_FROM` como **variable del repositorio**; ambos en tu `.env` local.
+
+### Paso 4. Aplicar los cambios
+Requiere haber hecho antes la configuración de Azure y Neon de [`06-ci-cd.md`](06-ci-cd.md).
+1. En GitHub: pestaña **Actions** → en la lista de la izquierda **Infraestructura Azure** → **Run workflow** → deja la imagen por defecto → **Run workflow**.
+2. Cuando termine, abre el registro de ese flujo: al final aparece `googleRedirectUri`. Agrégalo en el cliente de Google (paso 2.9).
+3. Prueba contra la API pública (reemplaza la dirección):
+   ```bash
+   curl -i -X POST https://<tu-api>/auth/sign-up/email \
+     -H 'content-type: application/json' -H 'origin: https://<tu-api>' \
+     -d '{"email":"tu@correo.com","name":"Tu nombre","password":"una-clave-larga-123"}'
+   ```
+   Debe llegarte el correo de verificación. Abre el enlace y luego inicia sesión con `POST /auth/sign-in/email`.
+
+### Resumen de nombres
+
+| Nombre | Tipo en GitHub | Viene de |
+|---|---|---|
+| `AUTH_SECRET` | Secreto del entorno `staging` | Paso 1 |
+| `GOOGLE_CLIENT_ID` | Variable del repositorio | Paso 2 |
+| `GOOGLE_CLIENT_SECRET` | Secreto del entorno `staging` | Paso 2 |
+| `SMTP_URL` | Secreto del entorno `staging` | Paso 3 |
+| `MAIL_FROM` | Variable del repositorio | Paso 3 |
+| `AUTH_TRUSTED_ORIGINS` | Variable del repositorio (vacía hasta que exista la web) | — |
 
 ## Probar en local
 
@@ -93,7 +171,15 @@ AUTH_SECRET=$(openssl rand -base64 48) \
 DATABASE_URL=postgres://kuntur:kuntur@localhost:5432/kuntur \
 pnpm --filter @kuntur/api start
 ```
-Registra una cuenta con `POST /auth/sign-up/email`: el enlace de verificación aparece en el registro de la API.
+Registra una cuenta con `POST /auth/sign-up/email`: el enlace de verificación aparece en el registro de la API (o llega a tu correo si configuraste `SMTP_URL` y `MAIL_FROM`).
+
+Para probar Google en local, con `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en el entorno, pide la URL de Google y ábrela en el navegador (el comportamiento esperado viene de la documentación de la librería y **no se probó**):
+```bash
+curl -s -X POST http://localhost:3000/auth/sign-in/social \
+  -H 'content-type: application/json' -H 'origin: http://localhost:3000' \
+  -d '{"provider":"google","callbackURL":"http://localhost:3000/auth/get-session"}'
+```
+La respuesta trae una `url`. Al aceptar en Google vuelves a `/auth/callback/google` y terminas en `/auth/get-session`, que muestra tu sesión.
 
 ## Seguridad
 
