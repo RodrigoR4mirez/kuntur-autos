@@ -10,11 +10,16 @@
 #   5. Imprime los 5 valores que debes guardar como variables en GitHub.
 set -euo pipefail
 
+# Uso: bash setup.sh            (staging, por defecto)
+#      ENVIRONMENT=production bash setup.sh   (producción: grupo, identidad y credencial propios)
 REPO="${REPO:-RodrigoR4mirez/kuntur-autos}"
-RG="${RG:-rg-kuntur-staging}"
+ENVIRONMENT="${ENVIRONMENT:-staging}"
+case "$ENVIRONMENT" in staging|production) ;; *) echo "ERROR: ENVIRONMENT debe ser staging o production."; exit 1;; esac
+RG="${RG:-rg-kuntur-$ENVIRONMENT}"
 LOCATION="${LOCATION:-brazilsouth}"
-IDENTITY_NAME="${IDENTITY_NAME:-kuntur-github-staging}"
-CONTAINERAPP_NAME="${CONTAINERAPP_NAME:-kuntur-api-staging}"
+IDENTITY_NAME="${IDENTITY_NAME:-kuntur-github-$ENVIRONMENT}"
+CONTAINERAPP_NAME="${CONTAINERAPP_NAME:-kuntur-api-$ENVIRONMENT}"
+echo "==> Entorno: $ENVIRONMENT (grupo $RG, identidad $IDENTITY_NAME)"
 
 echo "==> 1/5 Comprobando la suscripción"
 STATE=$(az account show --query state -o tsv)
@@ -52,10 +57,11 @@ read -r OWNER_LOGIN OWNER_ID REPO_NAME REPO_ID <<< "$(printf '%s' "$REPO_INFO" |
 import json, sys
 d = json.load(sys.stdin)
 print(d["owner"]["login"], d["owner"]["id"], d["name"], d["id"])')"
-SUBJECT="repo:${OWNER_LOGIN}@${OWNER_ID}/${REPO_NAME}@${REPO_ID}:environment:staging"
+SUBJECT="repo:${OWNER_LOGIN}@${OWNER_ID}/${REPO_NAME}@${REPO_ID}:environment:${ENVIRONMENT}"
 echo "    Subject que usará la credencial: $SUBJECT"
-PARAMS=$(printf '{"name":"github-staging","issuer":"https://token.actions.githubusercontent.com","subject":"%s","audiences":["api://AzureADTokenExchange"]}' "$SUBJECT")
-EXISTS=$(az ad app federated-credential list --id "$APP_ID" --query "[?name=='github-staging'] | length(@)" -o tsv)
+CRED_NAME="github-$ENVIRONMENT"
+PARAMS=$(printf '{"name":"%s","issuer":"https://token.actions.githubusercontent.com","subject":"%s","audiences":["api://AzureADTokenExchange"]}' "$CRED_NAME" "$SUBJECT")
+EXISTS=$(az ad app federated-credential list --id "$APP_ID" --query "[?name=='$CRED_NAME'] | length(@)" -o tsv)
 if [ "$EXISTS" = "0" ]; then
   # Si ya existe una credencial con ese nombre, no se modifica: revísala en el portal (ver docs/06-ci-cd.md).
   az ad app federated-credential create --id "$APP_ID" --parameters "$PARAMS" --output none
@@ -70,12 +76,19 @@ if [ "$HAS" = "0" ]; then
     --role Contributor --scope "$SCOPE" --output none
 fi
 
-echo "==> 5/5 Listo. Guarda estos 5 valores como VARIABLES del repositorio en GitHub:"
+echo "==> 5/5 Listo para el entorno $ENVIRONMENT."
 echo
-echo "AZURE_CLIENT_ID=$APP_ID"
-echo "AZURE_TENANT_ID=$TENANT"
-echo "AZURE_SUBSCRIPTION_ID=$SUB"
-echo "AZURE_RESOURCE_GROUP=$RG"
-echo "AZURE_CONTAINERAPP_NAME=$CONTAINERAPP_NAME"
+if [ "$ENVIRONMENT" = "staging" ]; then
+  echo "Variables del REPOSITORIO en GitHub (staging usa estas):"
+  echo "AZURE_CLIENT_ID=$APP_ID"
+  echo "AZURE_TENANT_ID=$TENANT"
+  echo "AZURE_SUBSCRIPTION_ID=$SUB"
+else
+  echo "Variables del entorno 'production' en GitHub (sobrescriben las del repositorio):"
+  echo "AZURE_CLIENT_ID=$APP_ID"
+  echo "AZURE_TENANT_ID=$TENANT"
+  echo "AZURE_SUBSCRIPTION_ID=$SUB"
+fi
 echo
+echo "Los nombres del grupo y de la app son fijos ($RG y $CONTAINERAPP_NAME); ya no se configuran como variables."
 echo "No son secretos (son identificadores). Las contraseñas no existen: GitHub entra con un permiso temporal."

@@ -1,15 +1,22 @@
-# Crea las tablas en la base de datos de staging (Neon), carga el catálogo inicial y comprueba la conexión.
+# Crea las tablas en la base de datos del entorno elegido (Neon), carga el catálogo inicial y comprueba la conexión.
 # Se lanza a mano. Es seguro repetirlo: las migraciones y el catálogo no duplican nada.
-name: Base de datos staging
+name: Base de datos
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Base a migrar y comprobar.'
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
 
 permissions:
   contents: read
 
 concurrency:
-  group: db-staging
+  group: db-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
@@ -17,7 +24,7 @@ jobs:
     name: Migrar y comprobar
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: staging
+    environment: ${{ inputs.environment }}
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:

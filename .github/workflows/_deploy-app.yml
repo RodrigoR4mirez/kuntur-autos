@@ -1,0 +1,89 @@
+# Despliegue reutilizable de la API a un entorno (staging o production). No se lanza sola:
+# la llaman "Despliegue a staging" y "Despliegue a producción".
+# Orden: migrar la base -> recordar la revisión actual -> actualizar la imagen -> prueba de humo -> revertir si falla.
+name: Desplegar la API (reutilizable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Entorno de GitHub (staging o production). Define sus secretos y variables.
+        required: true
+        type: string
+      image:
+        description: Imagen con digest (nombre@sha256:...).
+        required: true
+        type: string
+      resource_group:
+        description: Grupo de recursos de Azure del entorno.
+        required: true
+        type: string
+      app_name:
+        description: Nombre de la Container App del entorno.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Desplegar a Azure Container Apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.verify.outputs.url }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ENVIRONMENT_NAME: ${{ inputs.environment }}
+      IMAGE: ${{ inputs.image }}
+      RESOURCE_GROUP: ${{ inputs.resource_group }}
+      APP_NAME: ${{ inputs.app_name }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Iniciar sesión en Azure (OIDC, sin contraseñas guardadas)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Migrar la base de datos (migraciones compatibles hacia atrás)
+        run: pnpm db:seed
+      - name: Recordar la revisión actual para poder volver atrás
+        id: previous
+        run: |
+          previous=$(az containerapp show -n "$APP_NAME" -g "$RESOURCE_GROUP" \
+            --query 'properties.template.containers[0].image' -o tsv)
+          echo "image=$previous" >> "$GITHUB_OUTPUT"
+      - name: Desplegar la nueva imagen
+        id: update
+        run: az containerapp update -n "$APP_NAME" -g "$RESOURCE_GROUP" --image "$IMAGE" --output none
+      - name: Prueba de humo
+        id: verify
+        run: |
+          fqdn=$(az containerapp show -n "$APP_NAME" -g "$RESOURCE_GROUP" \
+            --query 'properties.configuration.ingress.fqdn' -o tsv)
+          url="https://${fqdn}"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          for attempt in $(seq 1 15); do
+            if curl -fsS --max-time 10 "$url/health" >/dev/null; then ok=1; break; fi
+            echo "Intento $attempt sin respuesta, esperando..."; sleep 8
+          done
+          [ "${ok:-0}" = 1 ] || { echo "La API no respondió /health"; exit 1; }
+          curl -fsS --max-time 10 "$url/catalog/brands" | grep -q '"brands"' \
+            || { echo "El catálogo no responde desde la base de datos"; exit 1; }
+          echo "Desplegado en $ENVIRONMENT_NAME: $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Volver a la revisión anterior si algo falló
+        if: ${{ failure() && steps.update.outcome == 'success' && steps.previous.outputs.image != '' }}
+        env:
+          PREVIOUS_IMAGE: ${{ steps.previous.outputs.image }}
+        run: |
+          echo "Revirtiendo a $PREVIOUS_IMAGE"
+          az containerapp update -n "$APP_NAME" -g "$RESOURCE_GROUP" --image "$PREVIOUS_IMAGE" --output none

@@ -22,7 +22,7 @@ Un cambio no está terminado hasta que su documentación en `docs/` está actual
 
 ## Skills del proyecto (`.claude/skills/`)
 - `kuntur-delivery`: **obligatoria** antes de tocar `.github/`, `infra/`, Docker, migraciones, secretos o desplegar. Define el camino seguro.
-- `kuntur-azure-infra`: mapa de Azure, consultas de solo lectura y diagnóstico.
+- `kuntur-azure-infra`: mapa de Azure (staging y producción), consultas de solo lectura y diagnóstico.
 - `kuntur-architecture`: al crear o cambiar código (capas, módulos, puertos, adaptadores, rutas).
 - `kuntur-ci-cd`: detalle de los flujos de GitHub, Docker y dependencias.
 - `kuntur-docs-sync`: al terminar cualquier cambio, para actualizar los documentos correctos.

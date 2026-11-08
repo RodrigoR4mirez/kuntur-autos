@@ -1,39 +1,40 @@
 ---
 name: kuntur-delivery
-description: Camino oficial y seguro para cualquier cambio de código, infraestructura, base de datos, secretos o despliegue de Kuntur Autos. Úsala SIEMPRE antes de tocar .github/, infra/, apps/api/Dockerfile, migraciones, variables o secretos, o cuando alguien pida "desplegar", "cambiar Azure", "revertir" o "encender la API".
+description: Camino oficial para cambiar, desplegar, revertir o poner en producción Kuntur Autos (código, infraestructura, base de datos, secretos). Úsala antes de tocar .github/, infra/, Dockerfile, migraciones, variables o secretos, o cuando alguien pida desplegar, encender, promover a producción o revertir.
 ---
 
-# Entrega continua de Kuntur Autos: el camino seguro
+# Entrega de Kuntur Autos: el camino correcto
 
-Lee `docs/10-runbook.md`. Es el procedimiento oficial; esta skill te dice qué camino tomar.
+Procedimiento completo: `docs/10-runbook.md`. Esta skill decide el camino; el runbook da los pasos.
 
-## Decide primero qué tipo de cambio es
+## Elige el camino
 
-| Quiero...                                                     | Camino                                                                   |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Cambiar código de la API                                      | Runbook, sección 3 (PR → `main` → despliegue automático)                 |
-| Cambiar infraestructura (Bicep, recursos, secretos de la app) | Runbook, sección 4 (PR → Infraestructura Azure, campo `image` **vacío**) |
-| Cambiar la base o sus migraciones                             | Runbook, sección 5                                                       |
-| Revertir algo que falló                                       | Runbook, sección 7 (primero la reversión automática; luego a mano)       |
-| Solo comprobar que todo está bien                             | Runbook, secciones 1 y 6 (no cambia nada)                                |
+| Quiero...                     | Camino                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| Cambiar código de la API      | PR a `main` → staging automático (runbook 3)                                          |
+| Cambiar infraestructura       | PR → **Infraestructura Azure**, `environment` correcto, `image` **vacío** (runbook 4) |
+| Cambiar la base o migraciones | Compatibles hacia atrás; **Base de datos** para comprobar (runbook 5)                 |
+| Publicar a producción         | Commit ya verde en staging → **Despliegue a producción** con su SHA (runbook 10)      |
+| Revertir                      | Automático primero; a mano con la sección 7 del runbook                               |
+| Solo comprobar                | Runbook 1 y 6. No cambia nada                                                         |
 
 ## Reglas que no se rompen
 
-1. Nunca trabajes directo en `main`. Siempre rama y pull request.
-2. Antes de decir que algo está listo: `pnpm check`. Debe pasar entero, incluido `pnpm delivery`.
-3. No cambies la imagen de la app a una etiqueta móvil. Si necesitas una versión concreta, usa el digest (`nombre@sha256:...`).
-4. Infraestructura: el campo `image` del flujo **vacío**. Si lo llenas, cambias la versión que corre.
-5. Cambiar un secreto de la app exige volver a ejecutar **Infraestructura Azure** después.
-6. Nunca borres `rg-kuntur-staging` sin confirmación explícita del propietario.
-7. Nunca pegues secretos en el chat, en commits ni en documentación.
-8. No ejecutes `infra/azure/setup.sh` sobre un entorno existente para "arreglar" algo: solo crea lo que falta y no modifica una credencial que ya existe.
+1. Nunca trabajes directo en `main`. Siempre rama y PR. Nunca `force push` a `main`.
+2. Antes de decir que algo está listo: `pnpm check` completo (incluye `pnpm delivery` y `pnpm workflows`).
+3. Producción solo despliega un commit que staging ya aprobó. No se reconstruye: se despliega el mismo digest.
+4. Nunca una etiqueta móvil (`:staging`, `:latest`) en la app. Digest siempre.
+5. Infraestructura con `image` vacío. Con valor, cambias la versión que corre.
+6. Cambiar un secreto no se aplica solo: vuelve a ejecutar Infraestructura Azure del mismo entorno.
+7. Staging y producción tienen secretos distintos. Nunca copies `AUTH_SECRET` ni `DATABASE_URL` de uno a otro.
+8. No borres grupos de recursos sin confirmación explícita del propietario.
+9. Ningún secreto en chat, commits ni documentación.
+10. `infra/azure/setup.sh` solo crea lo que falta; no modifica credenciales existentes.
 
-## Antes de dar algo por hecho
+## Si no puedes verificar algo
 
-- Actualiza `docs/10-runbook.md`, `docs/06-ci-cd.md` y la skill que corresponda (`kuntur-docs-sync`), en el mismo cambio.
-- Separa en tu respuesta lo **verificado** (con comando o prueba que lo demuestre) de lo **no verificado**.
-- Si no tienes acceso a GitHub o a Azure desde tu entorno, dilo: no inventes resultados de Actions ni de Azure.
+Di qué no pudiste comprobar (sin acceso a GitHub o a Azure desde tu entorno). No inventes resultados de Actions ni de Azure.
 
-## Si el usuario pide algo que va contra estas reglas
+## Al terminar
 
-Explica el riesgo en una frase y propón el camino seguro del runbook. Pregunta antes de hacer algo irreversible.
+Actualiza `docs/10-runbook.md` y `docs/06-ci-cd.md` si cambió un flujo, y aplica `kuntur-docs-sync`.

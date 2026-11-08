@@ -6,13 +6,15 @@ Complementa: `06-ci-cd.md` (cómo funciona cada flujo), `09-autenticacion.md` (v
 
 ## 1. Estado actual (no contiene secretos ni identificadores privados)
 
+Staging está en vivo. Producción se pone en marcha con la sección 10.
+
 | Recurso | Valor |
 |---|---|
 | Repositorio | `RodrigoR4mirez/kuntur-autos` (público) |
-| Grupo de recursos Azure | `rg-kuntur-staging` (Brazil South) |
-| Aplicación (Container App) | `kuntur-api-staging` |
+| Grupos de recursos Azure | `rg-kuntur-staging` y `rg-kuntur-production` (Brazil South) |
+| Aplicaciones (Container Apps) | `kuntur-api-staging` y `kuntur-api-production` |
 | Dirección pública de la API | `https://kuntur-api-staging.politerock-80f1ef72.brazilsouth.azurecontainerapps.io` |
-| Entorno de GitHub | `staging` (secretos del entorno) |
+| Entornos de GitHub | `staging` y `production` (secretos y variables propios) |
 | Imagen | `ghcr.io/rodrigor4mirez/kuntur-autos-api` (pública) |
 | Base de datos | Neon (PostgreSQL), en el secreto `DATABASE_URL` |
 | Identidad para GitHub | aplicación `kuntur-github-staging`, credencial federada `github-staging` (OIDC) |
@@ -106,3 +108,20 @@ Esto no está probado todavía en una cuenta real: confírmalo la primera vez co
 - **Verificado en GitHub (por el propietario):** CI, seguridad, despliegue a staging, flujo de infraestructura en el segundo intento, y `/health` respondiendo en Azure.
 - **Verificado localmente:** la coherencia de Dockerfile, documentación, Bicep y versión (`pnpm delivery`), con pruebas que la hacen fallar a propósito.
 - **No verificado:** la reversión manual de la sección 7; el cambio de base de datos completo; la alerta de presupuesto de Azure; el flujo con Google y el envío real de correos.
+
+## 10. Producción: primera puesta en marcha y uso normal
+
+Detalle en `06-ci-cd.md`, sección "Producción". Resumen operativo:
+
+**Primera vez (una sola vez):** entorno `production` con revisores; base de Neon separada; secretos propios; `ENVIRONMENT=production bash infra/azure/setup.sh`; variables de Azure dentro del entorno; **Infraestructura Azure** con `environment = production`; **Base de datos** con `environment = production`.
+
+**Cada despliegue a producción:**
+1. Confirma que el commit que quieres publicar terminó en verde en **Despliegue a staging** (copia su SHA completo de 40 caracteres).
+2. **Actions → Despliegue a producción → Run workflow**, pega el SHA y ejecuta.
+3. El flujo comprueba el commit y la aprobación de staging, resuelve el digest que staging probó y espera tu **aprobación** en el entorno `production`.
+4. Tras desplegar, verifica `/health` y `/catalog/brands` en la URL de producción.
+5. Si falla, el propio flujo revierte. Si no basta, sigue la sección 7.
+
+**Nunca:** desplegar producción desde una rama que no sea `main`; saltarse la compuerta; reutilizar secretos de staging.
+
+**Verificado:** la lógica de la compuerta tiene pruebas; el flujo de producción pasa el esquema de GitHub y las reglas de `pnpm workflows` y `pnpm delivery`. **No verificado:** ninguna ejecución real de producción todavía.

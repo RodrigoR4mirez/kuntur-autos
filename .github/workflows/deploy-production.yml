@@ -1,0 +1,74 @@
+# Despliegue a PRODUCCIÓN, a mano. Solo puede desplegar un commit que ya terminó en verde en staging.
+# No vuelve a construir: despliega el MISMO digest que staging probó. El entorno "production" exige
+# aprobación manual (revisores configurados en GitHub, ver docs/10-runbook.md).
+name: Despliegue a producción
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'SHA completo (40 caracteres) del commit que ya pasó en staging. Ejemplo: el de Actions → Despliegue a staging.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Comprobar que staging aprobó el commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      image: ${{ steps.resolve.outputs.image }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      COMMIT: ${{ inputs.commit }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Verificar el commit y resolver su imagen
+        id: resolve
+        run: |
+          set -euo pipefail
+          status=$(gh api "repos/$REPO/compare/main...$COMMIT" --jq .status)
+          case "$status" in
+            identical|behind) ;;
+            *) echo "::error::El commit no está en main (estado: $status)."; exit 1 ;;
+          esac
+          gh api "repos/$REPO/actions/workflows/deploy-staging.yml/runs?head_sha=$COMMIT&per_page=10" > runs.json
+          run_id=$(jq -r '[.workflow_runs[] | select(.conclusion=="success")][0].id // empty' runs.json)
+          if [ -z "$run_id" ]; then echo "::error::Staging no terminó en verde para este commit."; exit 1; fi
+          gh api "repos/$REPO/actions/runs/$run_id" > run.json
+          gh api "repos/$REPO/actions/runs/$run_id/jobs" > jobs.json
+          node scripts/promotion-gate.mjs run.json jobs.json "$COMMIT"
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          digest=$(docker buildx imagetools inspect "ghcr.io/${owner}/kuntur-autos-api:sha-${COMMIT}" \
+            --format '{{.Manifest.Digest}}')
+          echo "image=ghcr.io/${owner}/kuntur-autos-api@${digest}" >> "$GITHUB_OUTPUT"
+          echo "Imagen aprobada en staging: ghcr.io/${owner}/kuntur-autos-api@${digest}" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Desplegar a producción
+    needs: gate
+    uses: ./.github/workflows/_deploy-app.yml
+    with:
+      environment: production
+      image: ${{ needs.gate.outputs.image }}
+      resource_group: rg-kuntur-production
+      app_name: kuntur-api-production
+    permissions:
+      contents: read
+      id-token: write

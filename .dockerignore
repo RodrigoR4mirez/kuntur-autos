@@ -5,3 +5,9 @@ node_modules
 .env.*
 brand
 docs
+# Pruebas, configuración de CI y documentación: no hacen falta en la imagen de producción.
+**/*.test.ts
+scripts
+infra
+.github
+coverage

@@ -6,6 +6,12 @@ name: Infraestructura Azure
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Entorno a crear o actualizar.'
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
       image:
         description: 'Imagen a usar. Vacío (recomendado) = la que ya corre en Azure. Solo si sabes lo que haces: nombre@sha256:...'
         required: false
@@ -15,7 +21,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: infra-azure
+  group: infra-azure-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
@@ -23,13 +29,15 @@ jobs:
     name: Aplicar Bicep
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: staging
+    environment: ${{ inputs.environment }}
     permissions:
       contents: read
       id-token: write
     env:
-      RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-      APP_NAME: ${{ vars.AZURE_CONTAINERAPP_NAME }}
+      ENVIRONMENT_NAME: ${{ inputs.environment }}
+      RESOURCE_GROUP: rg-kuntur-${{ inputs.environment }}
+      APP_NAME: kuntur-api-${{ inputs.environment }}
+      MIN_REPLICAS: ${{ inputs.environment == 'production' && '1' || '0' }}
       INPUT_IMAGE: ${{ inputs.image }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
@@ -67,6 +75,7 @@ jobs:
           az deployment group what-if -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
             --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
+            environmentName="$ENVIRONMENT_NAME" minReplicas="$MIN_REPLICAS" \
             authSecret="$AUTH_SECRET" googleClientId="$GOOGLE_CLIENT_ID" \
             googleClientSecret="$GOOGLE_CLIENT_SECRET" smtpUrl="$SMTP_URL" mailFrom="$MAIL_FROM" \
             authTrustedOrigins="$AUTH_TRUSTED_ORIGINS"
@@ -77,6 +86,7 @@ jobs:
           az deployment group create -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
             --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
+            environmentName="$ENVIRONMENT_NAME" minReplicas="$MIN_REPLICAS" \
             authSecret="$AUTH_SECRET" googleClientId="$GOOGLE_CLIENT_ID" \
             googleClientSecret="$GOOGLE_CLIENT_SECRET" smtpUrl="$SMTP_URL" mailFrom="$MAIL_FROM" \
             authTrustedOrigins="$AUTH_TRUSTED_ORIGINS" \

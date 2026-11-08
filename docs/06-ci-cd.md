@@ -23,8 +23,10 @@ Ningún cambio llega a `main` ni a un servidor sin pasar por controles automáti
 |---|---|---|
 | `ci.yml` | Cada pull request. En `main` lo llama el despliegue. | **validate**: tipos, formato, regla de dependencias, política de flujos, pruebas con cobertura contra PostgreSQL real. **image**: construye la imagen Docker y la escanea. **infra**: compila la plantilla Bicep. |
 | `security.yml` | Cada pull request, antes de cada despliegue y cada lunes. | **codeql**: análisis estático de TypeScript. **dependency-review**: bloquea dependencias nuevas con vulnerabilidad alta (solo en PR). **audit**: `pnpm audit` de producción. **secrets**: gitleaks sobre todo el historial. **config-scan**: Trivy sobre archivos, Dockerfile y compose. |
+| `_deploy-app.yml` | Lo llaman staging y producción. | Despliegue reutilizable: migra la base, recuerda la revisión actual, actualiza la imagen, prueba `/health` y `/catalog/brands`, y vuelve atrás si falla. Usa el entorno que se le indica (`staging` o `production`) y sus secretos. |
 | `deploy-staging.yml` | Cada push a `main` y a mano. | CI → seguridad → publica la imagen en GHCR con SBOM y procedencia → escanea la imagen publicada → atesta su origen → migra la base → despliega a Azure Container Apps → prueba de humo → vuelve atrás si falla. |
-| `infra-azure.yml` | A mano. | Crea o actualiza la infraestructura de staging con Bicep (`what-if` y luego aplica). Con el campo `image` vacío (por defecto) **mantiene la versión que ya corre**; no la cambia por la etiqueta `staging`. |
+| `deploy-production.yml` | Solo a mano. | Despliega a producción **el mismo digest** que staging probó. Antes comprueba que el commit está en `main` y que el despliegue a staging de ese commit terminó en verde (`scripts/promotion-gate.mjs`). El entorno `production` exige aprobación. |
+| `infra-azure.yml` | A mano. Elige `environment` (staging por defecto). | Crea o actualiza la infraestructura de staging con Bicep (`what-if` y luego aplica). Con el campo `image` vacío (por defecto) **mantiene la versión que ya corre**; no la cambia por la etiqueta `staging`. |
 | `db-migrate.yml` | A mano. | Crea las tablas en la base de staging (Neon), carga el catálogo inicial y comprueba la conexión (`pnpm db:seed` y `pnpm db:check`). Es seguro repetirlo. No necesita Azure. |
 
 Archivos de apoyo: `.github/actions/setup` (Node + pnpm + instalación exacta del lockfile), `dependabot.yml`, `CODEOWNERS`, `pull_request_template.md` y `SECURITY.md` en la raíz.
@@ -76,7 +78,7 @@ Antes de usar una versión nueva, lee sus entradas (`action.yml` en ese SHA). De
 1. **Code security**: activar *Dependency graph*, *Dependabot alerts*, *Dependabot security updates*, *Secret scanning* con *Push protection*, y *Code scanning* (lo usa CodeQL).
 2. **Branches → regla para `main`**: exigir pull request; exigir que pasen estas comprobaciones y que la rama esté al día: *Validar (tipos, formato, dependencias, pruebas)*, *Imagen Docker (construir y escanear)*, *Infraestructura (validar Bicep)*, *Análisis de código (CodeQL)*, *Auditoría de dependencias de producción*, *Búsqueda de secretos (gitleaks)*, *Escaneo de configuración y archivos (Trivy)*, *Revisión de dependencias nuevas*; bloquear force-push y borrado; exigir resolver conversaciones. Con una sola persona no exijas aprobaciones: no podrías aprobar tu propio PR.
 3. **Environments → `staging`**: crearlo y guardar el secreto `DATABASE_URL`. Para producción, crear `production` con revisores obligatorios.
-4. **Variables del repositorio** (Settings → Secrets and variables → Actions → Variables): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, `AZURE_CONTAINERAPP_NAME`. No son secretas. Para el inicio de sesión, también variables opcionales: `GOOGLE_CLIENT_ID`, `MAIL_FROM`, `AUTH_TRUSTED_ORIGINS`.
+4. **Variables del repositorio** (Settings → Secrets and variables → Actions → Variables): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` (staging), `GOOGLE_CLIENT_ID`, `MAIL_FROM`, `AUTH_TRUSTED_ORIGINS`. Ya no hacen falta `AZURE_RESOURCE_GROUP` ni `AZURE_CONTAINERAPP_NAME`: los nombres son fijos (`rg-kuntur-<entorno>`, `kuntur-api-<entorno>`) y puedes borrarlas.
 5. **Secretos del entorno `staging`** (además de `DATABASE_URL`), todos opcionales y descritos en [`09-autenticacion.md`](09-autenticacion.md): `AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `SMTP_URL`. El flujo **Infraestructura Azure** los pasa a la Container App como secretos; `AUTH_BASE_URL` se calcula solo.
 
 ### Base de datos (Neon)
@@ -157,3 +159,26 @@ Cifras de fuentes públicas a noviembre de 2026; confírmalas en la página del 
 | `Login failed` en el flujo, sin `AADSTS` | Falta una variable `AZURE_*` o el valor tiene espacios |
 | Mensaje "No valid subscriptions found" en Cloud Shell | La cuenta no tiene una suscripción activa. Hay que crear una de pago por uso (ver el paso 1 de la guía) |
 | Prueba de humo falla en `/catalog/brands` | La API no llega a la base: revisa el secreto `DATABASE_URL` y que Neon esté despierta |
+
+## Producción
+
+Staging y producción usan el mismo camino y las mismas comprobaciones; lo que cambia es el entorno de GitHub, la base y el grupo de recursos.
+
+| | Staging | Producción |
+|---|---|---|
+| Cuándo se despliega | Automático en cada merge a `main` | A mano, con un commit ya aprobado en staging |
+| Grupo y app | `rg-kuntur-staging` / `kuntur-api-staging` | `rg-kuntur-production` / `kuntur-api-production` |
+| Réplicas mínimas | 0 (escala a cero) | 1 (sin arranque en frío) |
+| Aprobación manual | No | Sí (revisores del entorno `production`) |
+| Base de datos | Neon, proyecto de pruebas | Neon, proyecto **separado** |
+| Identidad Azure | `kuntur-github-staging` | `kuntur-github-production` (credencial `github-production`) |
+
+Orden para poner producción en marcha por primera vez (una sola vez):
+1. Crear el entorno `production` en GitHub: revisores obligatorios (tú) y restricción de ramas a `main`.
+2. Crear un proyecto de Neon separado y guardar su URL como secreto `DATABASE_URL` del entorno `production`. Igual para `AUTH_SECRET` (**distinto** al de staging), `GOOGLE_CLIENT_SECRET` y `SMTP_URL` si los usas.
+3. Ejecutar `ENVIRONMENT=production bash infra/azure/setup.sh` en Cloud Shell. Guarda las variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` y `AZURE_SUBSCRIPTION_ID` **dentro del entorno `production`** (sobrescriben las del repositorio).
+4. Ejecutar **Infraestructura Azure** con `environment = production` (campo `image` vacío). Revisar el what-if.
+5. Ejecutar **Base de datos** con `environment = production` para comprobar la conexión.
+6. Ejecutar **Despliegue a producción** con el SHA de un commit que ya terminó en verde en staging.
+
+Reglas: nunca desplegar a producción una imagen que staging no haya probado; no reutilizar el secreto `AUTH_SECRET` de staging; cualquier cambio de secreto de producción exige volver a ejecutar **Infraestructura Azure** con `environment = production`.

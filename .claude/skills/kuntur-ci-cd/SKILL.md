@@ -5,7 +5,7 @@ description: Integración y entrega continua de Kuntur Autos. Úsala al tocar .g
 
 # CI/CD de Kuntur Autos
 
-Antes que nada lee `docs/10-runbook.md` y la skill `kuntur-delivery`: definen el camino oficial. Después lee `docs/06-ci-cd.md` (flujos, controles, configuración única, qué está verificado) y `docs/07-hosting.md` (por qué Azure Container Apps + Neon).
+Antes que nada lee `docs/10-runbook.md` y la skill `kuntur-delivery`: definen el camino oficial (staging automático; producción a mano con compuerta). Después lee `docs/06-ci-cd.md` (flujos, controles, configuración única, qué está verificado) y `docs/07-hosting.md` (por qué Azure Container Apps + Neon).
 
 ## Reglas
 

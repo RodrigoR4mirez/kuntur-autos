@@ -108,16 +108,38 @@ export function checkDelivery(root) {
     );
   }
 
-  // 5. Entorno de despliegue
-  const deploy = parse(read('.github/workflows/deploy-staging.yml'));
-  if (
-    deploy.jobs?.deploy?.environment?.name !== 'staging' &&
-    deploy.jobs?.deploy?.environment !== 'staging'
-  ) {
-    add(
-      'deploy-staging.yml: el job deploy debe usar el entorno staging (lo exige la credencial de Azure)',
-    );
+  // 5. Entornos: cada despliegue usa su entorno de GitHub, y staging es el valor por defecto
+  //    en los flujos manuales (así nadie toca producción por accidente).
+  const reusable = parse(read('.github/workflows/_deploy-app.yml'));
+  const reusableEnv = reusable.jobs?.deploy?.environment;
+  const reusableEnvName = typeof reusableEnv === 'object' ? reusableEnv.name : reusableEnv;
+  if (reusableEnvName !== '${{ inputs.environment }}') {
+    add('_deploy-app.yml: el job deploy debe usar el entorno indicado por inputs.environment');
   }
+  const callers = {
+    'deploy-staging.yml': { env: 'staging', rg: 'rg-kuntur-staging', app: 'kuntur-api-staging' },
+    'deploy-production.yml': {
+      env: 'production',
+      rg: 'rg-kuntur-production',
+      app: 'kuntur-api-production',
+    },
+  };
+  for (const [file, want] of Object.entries(callers)) {
+    const job = parse(read(join('.github', 'workflows', file))).jobs?.deploy;
+    const w = job?.with ?? {};
+    if (job?.uses !== './.github/workflows/_deploy-app.yml')
+      add(`${file}: el job deploy debe llamar a _deploy-app.yml`);
+    if (w.environment !== want.env) add(`${file}: el entorno debe ser "${want.env}"`);
+    if (w.resource_group !== want.rg || w.app_name !== want.app)
+      add(`${file}: grupo o app inesperados para ${want.env}`);
+  }
+  const infraDoc = parse(read('.github/workflows/infra-azure.yml'));
+  const infraEnv = infraDoc.on?.workflow_dispatch?.inputs?.environment;
+  if (infraEnv?.default !== 'staging')
+    add('infra-azure.yml: el entorno por defecto debe ser staging');
+  const dbDoc = parse(read('.github/workflows/db-migrate.yml'));
+  const dbEnv = (dbDoc.on ?? dbDoc[true])?.workflow_dispatch?.inputs?.environment;
+  if (dbEnv?.default !== 'staging') add('db-migrate.yml: el entorno por defecto debe ser staging');
 
   return problems;
 }
