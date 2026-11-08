@@ -1,6 +1,6 @@
 # Construir desde la raíz del repositorio:
 #   docker build -f apps/api/Dockerfile -t kuntur-api .
-FROM node:22-slim AS deps
+FROM node:25-slim AS deps
 WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -12,7 +12,7 @@ COPY packages/design-tokens/package.json packages/design-tokens/
 COPY apps/api/package.json apps/api/
 RUN pnpm install --frozen-lockfile --prod --filter @kuntur/api...
 
-FROM node:22-slim
+FROM node:25-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
 COPY --from=deps /app/node_modules ./node_modules
