@@ -160,4 +160,5 @@ Cifras de fuentes públicas a noviembre de 2026; confírmalas en la página del 
 | CI falla en `Validar` con la base | Las pruebas destructivas solo aceptan `localhost`; revisa `DATABASE_URL` del job |
 | Trivy bloquea la imagen | Vulnerabilidad con arreglo en la imagen. Si es del `npm` o `yarn` incluidos en `node:22-slim` (por ejemplo `brace-expansion`, `ip-address`, `pacote`), ya se eliminan en la imagen final porque la API no los usa. Si es otra cosa, actualiza la dependencia o la imagen base |
 | Dependabot propone `node:25-slim` o similar | Solo se usan versiones LTS de Node; `dependabot.yml` ignora saltos de versión mayor de `node`. Cierra ese PR |
+| Aviso amarillo sobre `sslmode` en los registros | Lo emitía la librería `pg`: `sslmode=require` hoy verifica el certificado, pero en su próxima versión mayor dejará de hacerlo. El adaptador lo convierte a `verify-full` (`withStrictSsl`, con pruebas), así que la conexión sigue verificando al servidor y el aviso desaparece |
 | Prueba de humo falla en `/catalog/brands` | La API no llega a la base: revisa el secreto `DATABASE_URL` y que Neon esté despierta |
