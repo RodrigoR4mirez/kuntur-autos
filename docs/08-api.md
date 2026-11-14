@@ -26,6 +26,7 @@ Las rutas protegidas esperan `Authorization: Bearer <token>`. El token se convie
 | Método y ruta | Sesión | Qué hace | Respuestas |
 |---|---|---|---|
 | `GET /health` | no | Estado del servicio | 200 |
+| `GET /login-test` | no | **TEMPORAL**: página de prueba del inicio con Google. Solo existe en staging con `LOGIN_TEST_PAGE=true` (ver `11-google-login.md`) | 200 o 404 |
 | `GET/POST /auth/*` | no | Registro, verificación de correo, inicio de sesión y Google (Better Auth). Detalle en `09-autenticacion.md` | según la ruta |
 | `GET /catalog/brands` | no | Marcas | 200 |
 | `GET /catalog/brands/:id/models` | no | Modelos de una marca | 200, 400 id inválido, 404 marca desconocida |

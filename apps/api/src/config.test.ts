@@ -8,6 +8,7 @@ describe('loadConfig', () => {
     expect(loadConfig({})).toEqual({
       port: 3000,
       isProduction: false,
+      loginTestPage: false,
       databaseUrl: undefined,
       auth: { secret: undefined, baseUrl: undefined, trustedOrigins: [], google: null, smtp: null },
     });
@@ -37,6 +38,12 @@ describe('loadConfig', () => {
       secret: undefined,
       google: null,
     });
+  });
+
+  it('enables the temporary login test page only with LOGIN_TEST_PAGE=true', () => {
+    expect(loadConfig({ LOGIN_TEST_PAGE: 'true' }).loginTestPage).toBe(true);
+    expect(loadConfig({ LOGIN_TEST_PAGE: 'yes' }).loginTestPage).toBe(false);
+    expect(loadConfig({}).loginTestPage).toBe(false);
   });
 
   it('rejects a short secret', () => {

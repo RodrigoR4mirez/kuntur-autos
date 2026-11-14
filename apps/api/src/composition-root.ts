@@ -44,6 +44,8 @@ export interface Wiring {
 /** Si hay `databaseUrl` se usa PostgreSQL; si no, repositorios en memoria (solo desarrollo y pruebas). */
 export type WiringOptions = Pick<Config, 'databaseUrl' | 'isProduction' | 'auth'> & {
   readonly port?: number;
+  /** Página temporal de prueba del inicio con Google. Solo staging. */
+  readonly loginTestPage?: boolean;
 };
 
 /**
@@ -80,6 +82,7 @@ export async function createWiring(options: WiringOptions): Promise<Wiring> {
     useCases: {
       resolveSession: (token) => sessions.resolve(token),
       ...(authentication ? { auth: authentication.routes } : {}),
+      loginTestPage: options.loginTestPage === true && authentication !== null,
       determineAccessLevel: determineAccessLevel({ appointments }),
       createDraftListing: createDraftListing({
         listings,

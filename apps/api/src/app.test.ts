@@ -334,3 +334,34 @@ describe('catalog', () => {
     expect(res.json()).toMatchObject({ bodyTypes: expect.any(Array), colors: expect.any(Array) });
   });
 });
+
+describe('login test page (temporal, solo con la opción activa)', () => {
+  it('is absent by default', async () => {
+    const res = await app.inject({ method: 'GET', url: '/login-test' });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('serves a page that starts the sign-in from the browser when enabled', async () => {
+    const catalog = new InMemoryCatalogRepository();
+    const enabled = buildApp({
+      resolveSession: async () => null,
+      determineAccessLevel: determineAccessLevel({ appointments }),
+      createDraftListing: createDraftListing({
+        listings,
+        ids: new SequentialIds('x'),
+        clock: new FixedClock(NOW),
+      }),
+      submitListingForReview: submitListingForReview({ listings }),
+      getListingView: getListingView({ listings }),
+      listBrands: listBrands({ catalog }),
+      listModelsOfBrand: listModelsOfBrand({ catalog }),
+      getCatalogOptions: getCatalogOptions({ catalog }),
+      loginTestPage: true,
+    });
+    const res = await enabled.inject({ method: 'GET', url: '/login-test' });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/);
+    expect(res.body).toContain('/auth/sign-in/social');
+    expect(res.body).not.toMatch(/secret/i);
+  });
+});

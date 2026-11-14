@@ -38,6 +38,7 @@ jobs:
       RESOURCE_GROUP: rg-kuntur-${{ inputs.environment }}
       APP_NAME: kuntur-api-${{ inputs.environment }}
       MIN_REPLICAS: ${{ inputs.environment == 'production' && '1' || '0' }}
+      LOGIN_TEST_PAGE: ${{ vars.LOGIN_TEST_PAGE }}
       INPUT_IMAGE: ${{ inputs.image }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
@@ -75,7 +76,7 @@ jobs:
           az deployment group what-if -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
             --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
-            environmentName="$ENVIRONMENT_NAME" minReplicas="$MIN_REPLICAS" \
+            environmentName="$ENVIRONMENT_NAME" minReplicas="$MIN_REPLICAS" loginTestPage="${LOGIN_TEST_PAGE:-false}" \
             authSecret="$AUTH_SECRET" googleClientId="$GOOGLE_CLIENT_ID" \
             googleClientSecret="$GOOGLE_CLIENT_SECRET" smtpUrl="$SMTP_URL" mailFrom="$MAIL_FROM" \
             authTrustedOrigins="$AUTH_TRUSTED_ORIGINS"
@@ -86,7 +87,7 @@ jobs:
           az deployment group create -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
             --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
-            environmentName="$ENVIRONMENT_NAME" minReplicas="$MIN_REPLICAS" \
+            environmentName="$ENVIRONMENT_NAME" minReplicas="$MIN_REPLICAS" loginTestPage="${LOGIN_TEST_PAGE:-false}" \
             authSecret="$AUTH_SECRET" googleClientId="$GOOGLE_CLIENT_ID" \
             googleClientSecret="$GOOGLE_CLIENT_SECRET" smtpUrl="$SMTP_URL" mailFrom="$MAIL_FROM" \
             authTrustedOrigins="$AUTH_TRUSTED_ORIGINS" \

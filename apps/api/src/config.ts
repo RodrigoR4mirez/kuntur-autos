@@ -13,6 +13,8 @@ export interface AuthConfig {
 export interface Config {
   readonly port: number;
   readonly isProduction: boolean;
+  /** Página temporal de prueba del inicio con Google (solo staging). */
+  readonly loginTestPage: boolean;
   readonly databaseUrl: string | undefined;
   readonly auth: AuthConfig;
 }
@@ -48,6 +50,7 @@ export function loadConfig(env: Readonly<Record<string, string | undefined>>): C
   return {
     port,
     isProduction: get('NODE_ENV') === 'production',
+    loginTestPage: get('LOGIN_TEST_PAGE') === 'true',
     databaseUrl: get('DATABASE_URL'),
     auth: {
       secret,

@@ -10,6 +10,7 @@ import type {
 } from '@kuntur/core';
 import type { ResolveSession } from './interface/http/auth.ts';
 import { authRoutes, type AuthRouteDeps } from './interface/http/auth-routes.ts';
+import { loginTestRoute } from './interface/http/login-test-page.ts';
 import { catalogRoutes } from './interface/http/catalog-routes.ts';
 import { apiError } from './interface/http/errors.ts';
 import { healthRoutes } from './interface/http/health-routes.ts';
@@ -25,6 +26,8 @@ export interface UseCases {
   readonly resolveSession: ResolveSession;
   /** Rutas de inicio de sesión (/auth/*) del proveedor de autenticación. Ausente = sin inicio de sesión. */
   readonly auth?: AuthRouteDeps;
+  /** Página temporal de prueba del inicio con Google. Solo staging. */
+  readonly loginTestPage?: boolean;
   readonly listBrands: ListBrands;
   readonly listModelsOfBrand: ListModelsOfBrand;
   readonly getCatalogOptions: GetCatalogOptions;
@@ -46,6 +49,7 @@ export function buildApp(useCases: UseCases, options: FastifyServerOptions = {})
   listingRoutes(app, useCases);
   catalogRoutes(app, useCases);
   if (useCases.auth) authRoutes(app, useCases.auth);
+  if (useCases.loginTestPage) loginTestRoute(app);
 
   return app;
 }

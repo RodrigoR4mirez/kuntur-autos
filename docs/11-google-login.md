@@ -64,3 +64,16 @@ Mientras la app esté en *Testing*, solo entran los usuarios de prueba. Para abr
 
 ## Para desarrollo local (opcional)
 Agrega también `http://localhost:3000/auth/callback/google` al cliente y usa `AUTH_BASE_URL=http://localhost:3000` en tu `.env`.
+
+## Prueba desde el navegador (página temporal)
+
+La prueba con `curl` no basta: el inicio debe empezar en el navegador para que llegue la cookie de vuelta. Por eso hay una página temporal, activa solo en staging.
+
+**Activarla (una vez):**
+1. Settings → Environments → `staging` → Environment variables → **Add variable**: nombre `LOGIN_TEST_PAGE`, valor `true`.
+2. Actions → **Infraestructura Azure** → Run workflow: `environment` = staging, `image` vacío.
+3. Abre `<URL de staging>/login-test`.
+
+**Usarla:** pulsa **Entrar con Google**, elige tu cuenta de prueba y acepta. Debe aparecer tu sesión en JSON.
+
+**Retirarla** cuando exista la web: pon `LOGIN_TEST_PAGE` en `false` y vuelve a ejecutar Infraestructura Azure, o bórrala del entorno.

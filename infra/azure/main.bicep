@@ -43,6 +43,9 @@ param smtpUrl string = ''
 @description('Remitente de los correos, por ejemplo Kuntur Autos <no-responder@tudominio.pe>.')
 param mailFrom string = ''
 
+@description('Página temporal de prueba del inicio con Google. Solo staging: "true" la activa.')
+param loginTestPage string = 'false'
+
 @description('Puerto en el que escucha la API dentro del contenedor.')
 param targetPort int = 3000
 
@@ -127,6 +130,10 @@ var appEnv = concat(
     {
       name: 'DATABASE_URL'
       secretRef: 'database-url'
+    }
+    {
+      name: 'LOGIN_TEST_PAGE'
+      value: loginTestPage
     }
   ],
   empty(authSecret)
