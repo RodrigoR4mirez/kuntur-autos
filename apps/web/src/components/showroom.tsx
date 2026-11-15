@@ -36,7 +36,7 @@ function pick(tiles: readonly Tile[], keys: readonly string[]): Tile[] {
 
 /**
  * Sala de exhibición: el auto al centro y la información en tarjetas alrededor.
- * "Ver auto en detalle" oculta las tarjetas (sin mover nada: no hay salto de diseño).
+ * Las tarjetas flotan sobre la foto; "Ver solo el auto" las oculta y deja la imagen limpia.
  */
 export interface ShowroomPhoto {
   readonly src: string;
@@ -56,79 +56,79 @@ export function Showroom({ data, photo }: { data: ShowroomData; photo?: Showroom
             <h1 className="show-title">{data.title}</h1>
             <p className="show-place">{data.place}</p>
           </div>
-          <div className="show-head-right">
-            <p className="show-price mono">{data.priceText}</p>
-            <button
-              type="button"
-              className="btn btn-dark btn-sm"
-              aria-pressed={focus}
-              aria-controls="show-info"
-              onClick={() => setFocus((v) => !v)}
-            >
-              {focus ? 'Mostrar información' : 'Ver auto en detalle'}
-            </button>
-          </div>
+          <p className="show-price mono">{data.priceText}</p>
         </header>
 
         <div className="show-stage">
-          <div className="show-car">
+          <div className="show-media">
             {photo ? (
-              <>
-                <img
-                  className="show-photo"
-                  src={photo.src}
-                  alt={photo.alt}
-                  width={1400}
-                  height={934}
-                  fetchPriority="high"
-                />
-                <small className="show-photo-note">{photo.credit}</small>
-              </>
+              <img
+                className="show-photo"
+                src={photo.src}
+                alt={photo.alt}
+                width={1400}
+                height={934}
+                fetchPriority="high"
+              />
             ) : (
               <>
                 <CarArt />
                 <div className="show-platform" aria-hidden="true" />
-                <small className="show-photo-note">Ilustración. Fotos reales próximamente.</small>
               </>
             )}
           </div>
+
+          <div id="show-info" className="show-info" aria-hidden={focus}>
+            <ul className="show-group show-left">
+              {pick(data.specs, ['mileage', 'year']).map((t) => (
+                <TileCard key={t.key} tile={t} />
+              ))}
+              {pick(data.history, ['owners']).map((t) => (
+                <TileCard key={t.key} tile={t} />
+              ))}
+            </ul>
+            <ul className="show-group show-right">
+              {pick(data.specs, ['transmission', 'fuel', 'body', 'color']).map((t) => (
+                <TileCard key={t.key} tile={t} />
+              ))}
+            </ul>
+            <ul className="show-group show-bottom">
+              {pick(data.history, ['soat', 'review', 'service', 'liens', 'accidents', 'key']).map(
+                (t) => (
+                  <TileCard key={t.key} tile={t} />
+                ),
+              )}
+            </ul>
+          </div>
+
+          <button
+            type="button"
+            className="show-toggle"
+            aria-pressed={focus}
+            aria-controls="show-info"
+            onClick={() => setFocus((v) => !v)}
+          >
+            {focus ? 'Mostrar información' : 'Ver solo el auto'}
+          </button>
         </div>
 
-        <div id="show-info" className="show-info" aria-hidden={focus}>
-          <ul className="show-group show-left">
-            {pick(data.specs, ['mileage', 'year']).map((t) => (
-              <TileCard key={t.key} tile={t} />
-            ))}
-            {pick(data.history, ['owners']).map((t) => (
-              <TileCard key={t.key} tile={t} />
-            ))}
-          </ul>
-          <ul className="show-group show-right">
-            {pick(data.specs, ['transmission', 'fuel', 'body', 'color']).map((t) => (
-              <TileCard key={t.key} tile={t} />
-            ))}
-          </ul>
-          <ul className="show-group show-bottom">
-            {pick(data.history, ['soat', 'review', 'service', 'liens', 'accidents', 'key']).map(
-              (t) => (
-                <TileCard key={t.key} tile={t} />
-              ),
-            )}
-          </ul>
-          <div className="show-side">
-            <div className="show-tile show-tile-plate">
-              <small>Placa</small>
-              <span className="plate-chip mono">{data.plate.value}</span>
-              {data.plate.locked && <small>Se muestra al reservar tu visita con un asesor.</small>}
-            </div>
-            <div className="panel-dark show-reserve">
-              <strong>Reservar visita con un asesor</strong>
-              <small>Un asesor Kuntur te acompaña a ver el auto.</small>
-              <button type="button" className="btn btn-gold" disabled>
-                Reservar visita
-              </button>
-              <small>Disponible cuando se active el depósito.</small>
-            </div>
+        <small className="show-photo-note">
+          {photo ? photo.credit : 'Ilustración. Fotos reales próximamente.'}
+        </small>
+
+        <div className="show-side">
+          <div className="show-tile show-tile-plate">
+            <small>Placa</small>
+            <span className="plate-chip mono">{data.plate.value}</span>
+            {data.plate.locked && <small>Se muestra al reservar tu visita con un asesor.</small>}
+          </div>
+          <div className="panel-dark show-reserve">
+            <strong>Reservar visita con un asesor</strong>
+            <small>Un asesor Kuntur te acompaña a ver el auto.</small>
+            <button type="button" className="btn btn-gold" disabled>
+              Reservar visita
+            </button>
+            <small>Disponible cuando se active el depósito.</small>
           </div>
         </div>
       </section>
