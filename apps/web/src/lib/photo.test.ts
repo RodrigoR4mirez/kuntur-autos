@@ -7,9 +7,9 @@ describe('fotos responsivas', () => {
     expect(photoVariant('/ejemplo/ram.JPEG', 960)).toBe('/ejemplo/ram-960.webp');
   });
 
-  it('arma el srcset con los tres anchos', () => {
+  it('arma el srcset con todos los anchos', () => {
     expect(photoSrcSet('/a/b.jpg')).toBe(
-      '/a/b-480.webp 480w, /a/b-960.webp 960w, /a/b-1400.webp 1400w',
+      '/a/b-480.webp 480w, /a/b-640.webp 640w, /a/b-960.webp 960w, /a/b-1400.webp 1400w',
     );
   });
 });

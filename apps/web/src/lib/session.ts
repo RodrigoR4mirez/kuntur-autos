@@ -9,9 +9,10 @@ export interface CurrentUser {
 export async function currentUser(
   baseUrl: string | undefined = process.env['KUNTUR_API_URL'],
 ): Promise<CurrentUser | null> {
-  if (!baseUrl) return null;
+  // Leer la cookie SIEMPRE primero: así Next sabe que toda página con encabezado depende de la
+  // sesión y no la congela como estática (en el build no hay URL de la API).
   const cookie = (await cookies()).toString();
-  if (!cookie) return null;
+  if (!baseUrl || !cookie) return null;
   try {
     const res = await fetch(new URL('/auth/get-session', baseUrl), {
       headers: { cookie },

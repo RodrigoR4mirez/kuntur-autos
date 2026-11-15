@@ -1,5 +1,5 @@
 /** Anchos (px) de las versiones WebP que acompañan a cada foto JPG de `public/`. */
-export const PHOTO_WIDTHS = [480, 960, 1400] as const;
+export const PHOTO_WIDTHS = [480, 640, 960, 1400] as const;
 
 /** `/ejemplo/x.jpg` → `/ejemplo/x-480.webp`. */
 export function photoVariant(src: string, width: number): string {
