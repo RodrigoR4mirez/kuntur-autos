@@ -43,6 +43,7 @@ Sin secretos ni valores de configuración. Las fechas exactas solo se conocen do
 ## Diagnóstico de la web y arranque en frío (2026-11-15)
 - Revisada la web desplegada: estilos y fuentes bien; `/api/catalog/brands` dio 502 con la API dormida y 200 con la API despierta. Causa: escala a cero + espera de 15 s. Arreglo: 45 s, reintento de GET, mensaje claro.
 - El dueño pidió que el agente haga pull, pull request, fusión y revisión de Actions (regla en `CLAUDE.md`).
+- Rediseño de la landing con la marca (encabezado, hero con ficha de ejemplo, secciones, pie). Pruebas de contraste AA y de reglas de CSS en `apps/web/src/design.test.ts`. Aprendido: la ventana de Chrome del Mac no baja de cierto ancho; para capturas móviles reales se usa un marco de 390 px o Chrome sin ventana. `next dev` genera un `AGENTS.md` en `apps/web`: no se sube.
 - Entorno local: `pnpm` no estaba en el PATH; se usó `corepack pnpm` con un acceso directo temporal.
 
 ## Configuración que vive fuera del repositorio (sin valores)

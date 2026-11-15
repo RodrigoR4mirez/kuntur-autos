@@ -64,6 +64,9 @@ Insignia dorada que solo aparece si el auto pasó: consulta de placa con proveed
 
 Producir primero lo que genera confianza en la visita: credencial, polo, calco y llavero.
 
+## Aplicación en la web (rediseño 2026-11-15)
+La landing (`apps/web/src/app/page.tsx`, estilos en `home.css`) aplica la marca así: fondo Noche Andina (claro u oscuro según el sistema), **Rocoto solo para el botón principal** ("Vender mi auto"), **Oro Inca solo para el sello** y la palabra clave del título, Cielo Kuntur en los números de los pasos y el degradado de la banda final. La **placa** es el centro de la ficha de ejemplo (JetBrains Mono, fondo blanco, borde Noche). Títulos en Bricolage Grotesque y texto en Figtree. La ficha del hero está rotulada "Ejemplo de ficha": no es un anuncio real. `apps/web/src/design.test.ts` verifica el contraste AA (claro y oscuro) de los pares de color usados y reglas básicas del CSS.
+
 ## Accesibilidad
 Los tokens cumplen contraste AA. Los botones usan texto en negrita y tamaño mínimo de 44 px de alto en móvil. Nunca se usa el color como único indicador de estado.
 

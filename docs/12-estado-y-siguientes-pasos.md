@@ -23,7 +23,7 @@ Actualizado: 2026-11-15. Este archivo existe para que cualquier agente (otra ses
 ## Diagnóstico de la web (2026-11-15, verificado con curl y `gh`)
 - La web carga con estilos, fuentes y marca; la API directa responde; el último despliegue (`d445ffc`) fue verde con prueba de humo.
 - El "no funciona" tenía como causa técnica un **arranque en frío**: en staging la API escala a cero y la primera petición tardó más de 15 s, el reenvío daba 502 `api_unreachable`. Con la API despierta, `/api/catalog/brands` da 200 en ~0,4 s. Corregido: espera de 45 s, un reintento en GET y mensaje claro (`apps/web/src/lib/proxy.ts`).
-- Sigue sin verificar: captura móvil, ingreso con Google (falta el URI en Google Cloud) y el rediseño visual.
+- Rediseño de la landing hecho en la rama `feat/web-redesign` (encabezado fijo con botón principal, hero con ficha de ejemplo, pasos, sello, marcas y banda de venta; ver `04-marca.md`). Capturas antes/después tomadas con Chrome sin ventana. Sigue sin verificar: ingreso con Google (falta el URI en Google Cloud), LCP/CLS medidos en Azure (no se midió con Lighthouse) y la apariencia en navegadores distintos de Chrome.
 
 ## Pendiente, en orden sugerido
 1. Obtener la captura de la web desplegada y corregir lo que falle.

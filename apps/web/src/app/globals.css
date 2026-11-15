@@ -1,3 +1,4 @@
+@import url('./home.css');
 :root {
   --font-family-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
   --font-family-body: 'Figtree Variable', system-ui, sans-serif;
@@ -18,6 +19,7 @@ body {
   font-family: var(--font-family-body);
   font-size: var(--font-size-md);
   line-height: 1.55;
+  overflow-wrap: break-word;
 }
 h1,
 h2,
@@ -33,72 +35,18 @@ a {
   outline: 3px solid var(--t-primary);
   outline-offset: 3px;
 }
-.bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: var(--space-4);
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-family: var(--font-family-display);
-  font-weight: 700;
-  font-size: var(--font-size-lg);
-  color: var(--t-text);
-  text-decoration: none;
-}
-.bar nav {
-  display: flex;
-  gap: var(--space-4);
-}
-.bar nav a {
-  color: var(--t-text);
-  text-decoration: none;
-  font-weight: 600;
-  padding: var(--space-3) 0;
-}
-main {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 0 var(--space-4);
-}
-.hero {
-  padding: var(--space-12) 0 var(--space-16);
-}
-.eyebrow {
-  color: var(--t-text-muted);
-  font-weight: 600;
-  margin: 0 0 var(--space-3);
-}
-h1 {
-  font-size: var(--font-size-3xl);
-  max-width: 14ch;
-}
-.lead {
-  font-size: var(--font-size-lg);
-  max-width: 40rem;
-  color: var(--t-text-muted);
-}
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin: var(--space-6) 0;
-}
 .btn {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  justify-content: center;
+  min-height: 48px;
   padding: 0 var(--space-6);
   border-radius: var(--radius-pill);
   font-weight: 700;
   text-decoration: none;
-  transition: transform var(--motion-fast);
+  transition:
+    transform var(--motion-fast),
+    background var(--motion-fast);
 }
 .btn:hover {
   transform: translateY(-1px);
@@ -111,9 +59,12 @@ h1 {
   border: 2px solid var(--t-border);
   color: var(--t-text);
 }
+.btn-sm {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+}
 .plate {
   display: inline-block;
-  margin: var(--space-6) 0 0;
   padding: var(--space-2) var(--space-6);
   background: #fff;
   color: #0d1b2a;
@@ -124,88 +75,15 @@ h1 {
   font-size: var(--font-size-xl);
   letter-spacing: 0.12em;
 }
-.section {
-  padding: var(--space-12) 0;
-  border-top: 1px solid var(--t-border);
-}
-.section h2 {
-  font-size: var(--font-size-2xl);
-}
-.steps {
-  list-style: none;
-  padding: 0;
-  margin: var(--space-6) 0 0;
-  display: grid;
-  gap: var(--space-6);
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-}
-.steps li {
-  background: var(--t-surface);
-  border: 1px solid var(--t-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-}
-.num {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-pill);
-  background: var(--t-primary);
-  color: var(--t-on-primary);
-  font-weight: 700;
-  margin-bottom: var(--space-3);
-}
-.steps h3 {
-  font-size: var(--font-size-lg);
-}
-.steps p {
-  margin: 0;
-  color: var(--t-text-muted);
-}
 .seal {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   background: var(--t-verified);
   color: var(--t-on-verified);
   font-weight: 700;
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
-  margin-bottom: var(--space-3);
-}
-.trust p {
-  max-width: 40rem;
-  color: var(--t-text-muted);
-}
-.chips {
-  list-style: none;
-  padding: 0;
-  margin: var(--space-4) 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-.chips li {
-  padding: var(--space-2) var(--space-4);
-  background: var(--t-surface);
-  border: 1px solid var(--t-border);
-  border-radius: var(--radius-pill);
-  font-weight: 600;
-}
-.foot {
-  max-width: 72rem;
-  margin: var(--space-12) auto 0;
-  padding: var(--space-6) var(--space-4);
-  border-top: 1px solid var(--t-border);
-  color: var(--t-text-muted);
-  font-size: var(--font-size-sm);
-}
-.foot p {
-  margin: 0 0 var(--space-1);
-}
-@media (min-width: 48rem) {
-  h1 {
-    font-size: 4.5rem;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   html {
