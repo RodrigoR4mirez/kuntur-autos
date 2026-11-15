@@ -96,3 +96,6 @@ La foto (o la ilustración) ocupa todo el ancho de la ficha y todo lo que flota 
 
 ### Autos de ejemplo con fotos gratuitas (2026-11-15)
 `/ejemplo` es una galería de 5 autos de ejemplo (`apps/web/src/lib/examples.ts`: Chevrolet Bel Air 1957, Mercedes-Benz Clase A 2018, Toyota RAV4 2014, RAM 1500 2021 y Suzuki S-Cross 2019) y `/ejemplo/<slug>` abre cada ficha. Datos inventados, rotulados como ejemplo; no pasan por la base ni aparecen en `/autos`. Las fotos viven en `apps/web/public/ejemplo/` y son de Pexels (licencia gratuita, sin atribución obligatoria); cada una se descargó de la dirección pública de imágenes de Pexels y se revisó a ojo. **Solo se usan en `/ejemplo`**: no deben aparecer en anuncios reales. Sin verificar: el nombre de cada fotógrafo (no se muestra).
+
+### Portada con foto y vidrio (2026-11-15)
+El bloque principal de `/` usa la foto del primer auto de ejemplo a todo el panel, con vidrio (`.show-glass`) para el título, la placa y el kilometraje de ejemplo y la barra "Ver ficha". Debajo, "Así se ve un anuncio" muestra los 5 ejemplos (5 columnas desde 80 rem). En móvil se oculta el párrafo del título para no tapar el auto. Sin verificar: otros navegadores y un celular físico.

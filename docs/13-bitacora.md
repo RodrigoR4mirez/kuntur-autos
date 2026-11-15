@@ -63,6 +63,8 @@ Sin secretos ni valores de configuración. Las fechas exactas solo se conocen do
 - **Base de datos:** revisada, sin cambios: ya hay índices (publicados, dueño, marca/modelo/año) y el listado es un solo `JOIN` con `LIMIT`. El tiempo de la primera consulta tras inactividad depende del autosuspendido de Neon (no se tocó).
 - **Pendiente de decisión del dueño:** `MIN_REPLICAS=1` en las variables del entorno `staging` de GitHub (y volver a ejecutar Infraestructura Azure) evita el arranque en frío; tiene un costo mensual pequeño. El agente no toca variables de GitHub.
 
+- **Portada con foto (2026-11-15):** el dueño vio la portada con la ilustración del auto gris y la creyó una versión antigua. Ahora el bloque principal usa la foto del primer ejemplo con vidrio (título, placa y kilometraje de ejemplo y barra "Ver ficha") y debajo hay una fila "Así se ve un anuncio" con los 5 autos de ejemplo. Los autos reales publicados aún muestran la ilustración (no hay subida de fotos). La ilustración `CarArt` sigue en las tarjetas sin foto.
+
 ## Configuración que vive fuera del repositorio (sin valores)
 | Dónde | Qué | Quién |
 |---|---|---|

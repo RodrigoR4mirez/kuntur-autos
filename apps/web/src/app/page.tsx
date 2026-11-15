@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CarArt } from '../components/car-art.tsx';
+import { ListingCard } from '../components/listing-card.tsx';
 import {
   IconArrow,
   IconCoin,
@@ -10,7 +10,9 @@ import {
   IconTag,
 } from '../components/icons.tsx';
 import { fetchBrands } from '../lib/api.ts';
+import { EXAMPLES, exampleCardData } from '../lib/examples.ts';
 import { apiGet, formatMoney, parseListingCards } from '../lib/listings.ts';
+import { photoSrcSet } from '../lib/photo.ts';
 
 const steps = [
   {
@@ -54,6 +56,9 @@ const tiles = [
 
 export const dynamic = 'force-dynamic';
 
+// La portada muestra el primer ejemplo como auto protagonista.
+const heroCar = EXAMPLES[0]!;
+
 export default async function Home() {
   // Espera corta: la portada nunca debe quedar esperando a una API que está despertando.
   const [brands, recent] = await Promise.all([
@@ -63,19 +68,36 @@ export default async function Home() {
   const latest = recent.ok ? parseListingCards(recent.data) : [];
   return (
     <main className="board">
-      <section className="panel hero" aria-labelledby="titulo">
-        <div className="hero-head">
+      <section className="panel home-hero" aria-labelledby="titulo">
+        <img
+          className="home-hero-photo"
+          src={heroCar.photo.src}
+          srcSet={photoSrcSet(heroCar.photo.src)}
+          sizes="(min-width: 64rem) 66vw, 100vw"
+          alt={heroCar.photo.alt}
+          width={1400}
+          height={934}
+          fetchPriority="high"
+        />
+        <div className="home-hero-copy show-glass">
           <span className="chip">Ejemplo de ficha</span>
-          <span className="chip-ghost">Todo el Perú</span>
+          <h1 id="titulo">El auto con historial claro.</h1>
+          <p className="lead">
+            Verificamos la placa y presentamos cada auto con un asesor propio. Ves desde arriba,
+            como el cóndor, antes de comprar.
+          </p>
+          <div className="home-hero-cta">
+            <Link className="btn btn-primary" href="/autos">
+              Ver autos
+            </Link>
+            <Link className="btn btn-dark" href="/#como-funciona">
+              Cómo funciona <IconArrow />
+            </Link>
+          </div>
         </div>
-        <h1 id="titulo">El auto con historial claro.</h1>
-        <p className="lead">
-          Verificamos la placa y presentamos cada auto con un asesor propio. Ves desde arriba, como
-          el cóndor, antes de comprar.
-        </p>
 
-        <div className="specs">
-          <div className="spec">
+        <div className="home-hero-specs">
+          <div className="spec show-glass">
             <span className="spec-icon">
               <IconShield />
             </span>
@@ -84,35 +106,26 @@ export default async function Home() {
               <strong className="mono">KNT-482</strong>
             </div>
           </div>
-          <div className="spec">
+          <div className="spec show-glass">
             <span className="spec-icon">
               <IconGauge />
             </span>
             <div>
               <small>Kilometraje real</small>
-              <strong>48,200 km</strong>
+              <strong>{heroCar.detail.mileageKm.toLocaleString('en-US')} km</strong>
             </div>
           </div>
         </div>
 
-        <div className="car-wrap">
-          <CarArt />
-        </div>
-
-        <div className="hero-bar">
-          <span className="swatches" aria-hidden="true">
-            <i style={{ background: '#070b11' }} />
-            <i style={{ background: '#bf3417' }} />
-            <i style={{ background: '#e0a82e' }} />
+        <Link className="home-hero-bar show-glass" href={`/ejemplo/${heroCar.slug}`}>
+          <span className="hero-bar-text">
+            <strong>Ejemplo: {heroCar.detail.title}</strong>
+            <small>Tres controles listos · {formatMoney(heroCar.detail.price)}</small>
           </span>
-          <div className="hero-bar-text">
-            <strong>Ejemplo: Toyota Corolla 2019</strong>
-            <small>Tres controles listos · S/ 52,900</small>
-          </div>
-          <Link className="btn btn-dark" href="/#como-funciona">
-            Cómo funciona <IconArrow />
-          </Link>
-        </div>
+          <span className="btn btn-dark">
+            Ver ficha <IconArrow />
+          </span>
+        </Link>
       </section>
 
       <aside className="panel side-panel" aria-labelledby="asesor">
@@ -169,6 +182,30 @@ export default async function Home() {
           </Link>
         </div>
       </aside>
+
+      <section className="panel examples-card" aria-labelledby="ejemplos">
+        <div className="card-head">
+          <div>
+            <h2 id="ejemplos">Así se ve un anuncio</h2>
+            <small className="examples-note">
+              Cinco autos de ejemplo con datos inventados y fotos gratuitas de Pexels.
+            </small>
+          </div>
+          <Link className="btn btn-ghost btn-sm" href="/ejemplo">
+            Ver todos
+          </Link>
+        </div>
+        <ul className="car-grid" aria-label="Autos de ejemplo">
+          {EXAMPLES.map((car) => {
+            const c = exampleCardData(car);
+            return (
+              <li key={car.slug}>
+                <ListingCard item={c} photo={c.photo} href={c.href} />
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       <section id="como-funciona" className="panel steps-card" aria-labelledby="como">
         <div className="card-head">
