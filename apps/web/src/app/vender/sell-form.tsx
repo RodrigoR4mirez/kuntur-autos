@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { parseTriState } from '../../lib/tri-state.ts';
+import { DEPARTMENTS } from '../../lib/peru.ts';
 
 interface Option {
   id: number;
@@ -268,7 +269,13 @@ export function SellForm() {
       <div className="row">
         <label>
           Departamento
-          <input name="department" required defaultValue="Lima" />
+          <select name="department" required defaultValue="Lima">
+            {DEPARTMENTS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
         </label>
         <label>
           Ciudad

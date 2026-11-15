@@ -1,6 +1,8 @@
+import Link from 'next/link';
 import { ListingCard } from '../../components/listing-card.tsx';
 import { fetchBrands } from '../../lib/api.ts';
 import { apiGet, buildListingsQuery, parseListingCards } from '../../lib/listings.ts';
+import { DEPARTMENTS } from '../../lib/peru.ts';
 
 export const metadata = { title: 'Autos — Kuntur Autos' };
 export const dynamic = 'force-dynamic';
@@ -19,7 +21,13 @@ export default async function Autos({ searchParams }: { searchParams: Search }) 
   const brandId = num(one(sp['marca']));
   const maxPricePen = num(one(sp['precio']));
   const minYear = num(one(sp['desde']));
-  const filtered = brandId !== undefined || maxPricePen !== undefined || minYear !== undefined;
+  const rawDepartment = one(sp['departamento']);
+  const department = DEPARTMENTS.includes(rawDepartment) ? rawDepartment : undefined;
+  const filtered =
+    brandId !== undefined ||
+    maxPricePen !== undefined ||
+    minYear !== undefined ||
+    department !== undefined;
 
   const [brands, result] = await Promise.all([
     fetchBrands(),
@@ -29,6 +37,7 @@ export default async function Autos({ searchParams }: { searchParams: Search }) 
           ...(brandId !== undefined ? { brandId } : {}),
           ...(maxPricePen !== undefined ? { maxPricePen } : {}),
           ...(minYear !== undefined ? { minYear } : {}),
+          ...(department !== undefined ? { department } : {}),
         }),
     ),
   ]);
@@ -44,7 +53,7 @@ export default async function Autos({ searchParams }: { searchParams: Search }) 
           Cada anuncio lo revisa un asesor de Kuntur antes de aparecer aquí.
         </p>
 
-        <form className="filters" method="get" action="/autos">
+        <form id="filtros" className="filters" method="get" action="/autos">
           <label>
             Marca
             <select name="marca" defaultValue={brandId ? String(brandId) : ''}>
@@ -52,6 +61,17 @@ export default async function Autos({ searchParams }: { searchParams: Search }) 
               {brands.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Departamento
+            <select name="departamento" defaultValue={department ?? ''}>
+              <option value="">Todo el Perú</option>
+              {DEPARTMENTS.map((d) => (
+                <option key={d} value={d}>
+                  {d}
                 </option>
               ))}
             </select>
@@ -83,9 +103,9 @@ export default async function Autos({ searchParams }: { searchParams: Search }) 
             Buscar
           </button>
           {filtered && (
-            <a className="btn btn-ghost" href="/autos">
+            <Link className="btn btn-ghost" href="/autos">
               Limpiar
-            </a>
+            </Link>
           )}
         </form>
       </section>
@@ -106,12 +126,12 @@ export default async function Autos({ searchParams }: { searchParams: Search }) 
               ? 'Prueba con otro precio o quita algún filtro.'
               : 'Sé el primero: publica tu auto y un asesor lo revisa.'}
           </p>
-          <a className="btn btn-primary" href={filtered ? '/autos' : '/vender'}>
+          <Link className="btn btn-primary" href={filtered ? '/autos' : '/vender'}>
             {filtered ? 'Ver todos' : 'Vender mi auto'}
-          </a>
+          </Link>
           {!filtered && (
             <p className="hint">
-              ¿Quieres ver cómo se ve? <a href="/ejemplo">Mira cinco autos de ejemplo</a>.
+              ¿Quieres ver cómo se ve? <Link href="/ejemplo">Mira cinco autos de ejemplo</Link>.
             </p>
           )}
         </section>

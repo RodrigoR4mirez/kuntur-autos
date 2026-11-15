@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Showroom } from '../../../components/showroom.tsx';
+import { fetchCatalogOptions } from '../../../lib/api.ts';
 import { apiGet } from '../../../lib/listings.ts';
 import { buildShowroom, parseCatalogOptions, parseListingDetail } from '../../../lib/showroom.ts';
 
@@ -9,7 +11,7 @@ export default async function Anuncio({ params }: { params: Promise<{ id: string
   const { id } = await params;
   const [listing, options] = await Promise.all([
     apiGet(`/listings/${encodeURIComponent(id)}`),
-    apiGet('/catalog/options', undefined, 8000),
+    fetchCatalogOptions(),
   ]);
 
   if (!listing.ok && listing.status === 404) notFound();
@@ -30,6 +32,6 @@ export default async function Anuncio({ params }: { params: Promise<{ id: string
   const detail = parseListingDetail(listing.data);
   if (!detail) notFound();
 
-  const data = buildShowroom(detail, parseCatalogOptions(options.ok ? options.data : null));
+  const data = buildShowroom(detail, parseCatalogOptions(options));
   return <Showroom data={data} />;
 }

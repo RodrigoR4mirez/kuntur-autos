@@ -80,6 +80,8 @@ export class PostgresListingRepository implements ListingRepository {
     if (filter.maxPriceMinor !== undefined)
       conditions.push(lte(listings.priceMinor, filter.maxPriceMinor));
     if (filter.minYear !== undefined) conditions.push(gte(vehicleDetails.year, filter.minYear));
+    if (filter.department !== undefined)
+      conditions.push(eq(listings.department, filter.department));
 
     const rows = await this.db
       .select({ listing: listings, vehicle: vehicleDetails })

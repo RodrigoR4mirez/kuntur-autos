@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
@@ -19,7 +20,7 @@ export function NavLink({
   const active =
     !href.includes('#') && (href === '/' ? pathname === '/' : pathname.startsWith(href));
   return (
-    <a
+    <Link
       href={href}
       className={className}
       aria-label={label}
@@ -28,6 +29,6 @@ export function NavLink({
     >
       {children}
       <span className="nav-label">{label}</span>
-    </a>
+    </Link>
   );
 }

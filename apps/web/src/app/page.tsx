@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CarArt } from '../components/car-art.tsx';
 import {
   IconArrow,
@@ -108,9 +109,9 @@ export default async function Home() {
             <strong>Ejemplo: Toyota Corolla 2019</strong>
             <small>Tres controles listos · S/ 52,900</small>
           </div>
-          <a className="btn btn-dark" href="/#como-funciona">
+          <Link className="btn btn-dark" href="/#como-funciona">
             Cómo funciona <IconArrow />
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -126,23 +127,23 @@ export default async function Home() {
         </div>
         <div className="tiles">
           {tiles.map((t) => (
-            <a key={t.title} href={t.href} className={t.dark ? 'tile tile-dark' : 'tile'}>
+            <Link key={t.title} href={t.href} className={t.dark ? 'tile tile-dark' : 'tile'}>
               <span className="tile-icon">{t.icon}</span>
               <strong>{t.title}</strong>
               <small>{t.text}</small>
-            </a>
+            </Link>
           ))}
         </div>
         <div className="recent">
           <div className="recent-head">
             <h3>Recién publicados</h3>
-            <a href="/autos">Ver todos</a>
+            <Link href="/autos">Ver todos</Link>
           </div>
           {latest.length > 0 ? (
             <ul>
               {latest.map((l) => (
                 <li key={l.id}>
-                  <a href={`/anuncios/${encodeURIComponent(l.id)}`}>
+                  <Link href={`/anuncios/${encodeURIComponent(l.id)}`}>
                     <span>
                       <strong>{l.title}</strong>
                       <small>
@@ -150,22 +151,22 @@ export default async function Home() {
                       </small>
                     </span>
                     <span className="mono">{formatMoney(l.price)}</span>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           ) : (
             <p className="recent-empty">
-              Aún no hay autos publicados. <a href="/vender">Publica el tuyo</a> y un asesor lo
-              revisa.
+              Aún no hay autos publicados. <Link href="/vender">Publica el tuyo</Link> y un asesor
+              lo revisa.
             </p>
           )}
         </div>
         <div className="note">
           <p>“Pagas S/ 10 para reservar tu visita. Te los devolvemos cuando asistas.”</p>
-          <a className="btn btn-gold btn-sm" href="/ingresar">
+          <Link className="btn btn-gold btn-sm" href="/ingresar">
             Ingresar <IconArrow />
-          </a>
+          </Link>
         </div>
       </aside>
 

@@ -1,5 +1,6 @@
 /** Anuncios y cuenta desde la API. La interfaz nunca asume que la API responde ni que responde bien. */
 import { cookies } from 'next/headers';
+import { DEPARTMENTS } from './peru.ts';
 
 export interface Money {
   readonly amountMinor: number;
@@ -154,6 +155,7 @@ export interface SearchParams {
   readonly brandId?: number;
   readonly maxPricePen?: number;
   readonly minYear?: number;
+  readonly department?: string;
 }
 
 /** Arma la query de GET /listings. Los filtros vacíos o inválidos se omiten. */
@@ -166,6 +168,7 @@ export function buildListingsQuery(p: SearchParams, limit = 24): string {
   }
   if (p.minYear && Number.isInteger(p.minYear) && p.minYear >= 1950)
     q.set('minYear', String(p.minYear));
+  if (p.department && DEPARTMENTS.includes(p.department)) q.set('department', p.department);
   return q.toString();
 }
 

@@ -320,6 +320,15 @@ describe('unknown routes', () => {
 });
 
 describe('catalog', () => {
+  it('lets browsers cache the catalog but never the listings', async () => {
+    const brands = await app.inject({ method: 'GET', url: '/catalog/brands' });
+    expect(brands.headers['cache-control']).toContain('max-age=300');
+    const options = await app.inject({ method: 'GET', url: '/catalog/options' });
+    expect(options.headers['cache-control']).toContain('max-age=300');
+    const list = await app.inject({ method: 'GET', url: '/listings' });
+    expect(list.headers['cache-control']).toBeUndefined();
+  });
+
   it('lists brands', async () => {
     const res = await app.inject({ method: 'GET', url: '/catalog/brands' });
     expect(res.statusCode).toBe(200);
@@ -418,7 +427,13 @@ describe('GET /listings (listado público)', () => {
         await app.inject({ method: 'GET', url: '/listings?minYear=2019&maxPriceMinor=9000000' })
       ).json().items,
     ).toHaveLength(1);
-    for (const bad of ['limit=0', 'limit=500', 'brandId=abc', 'offset=-1']) {
+    expect(
+      (await app.inject({ method: 'GET', url: '/listings?department=Lima' })).json().items,
+    ).toHaveLength(1);
+    expect(
+      (await app.inject({ method: 'GET', url: '/listings?department=Cusco' })).json().items,
+    ).toEqual([]);
+    for (const bad of ['limit=0', 'limit=500', 'brandId=abc', 'offset=-1', 'department=']) {
       expect((await app.inject({ method: 'GET', url: `/listings?${bad}` })).statusCode).toBe(400);
     }
   });

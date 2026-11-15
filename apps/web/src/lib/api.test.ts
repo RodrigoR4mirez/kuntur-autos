@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fetchBrands, parseBrands } from './api.ts';
+import { fetchBrands, fetchCatalogOptions, parseBrands } from './api.ts';
 
 describe('parseBrands', () => {
   it('conserva solo marcas con id y nombre', () => {
@@ -33,5 +33,19 @@ describe('fetchBrands', () => {
     const bad = (async () => new Response('x', { status: 500 })) as unknown as typeof fetch;
     expect(await fetchBrands('http://api.test', down)).toEqual([]);
     expect(await fetchBrands('http://api.test', bad)).toEqual([]);
+  });
+});
+
+describe('fetchCatalogOptions', () => {
+  it('devuelve el JSON cuando la API responde y null cuando no', async () => {
+    const ok = (async () => Response.json({ colors: [] })) as unknown as typeof fetch;
+    const bad = (async () => new Response('x', { status: 500 })) as unknown as typeof fetch;
+    const down = (async () => {
+      throw new Error('caída');
+    }) as unknown as typeof fetch;
+    expect(await fetchCatalogOptions('http://api.test', ok)).toEqual({ colors: [] });
+    expect(await fetchCatalogOptions('http://api.test', bad)).toBeNull();
+    expect(await fetchCatalogOptions('http://api.test', down)).toBeNull();
+    expect(await fetchCatalogOptions('', ok)).toBeNull();
   });
 });

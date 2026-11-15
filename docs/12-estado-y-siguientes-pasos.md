@@ -28,6 +28,8 @@ Actualizado: 2026-11-15. Este archivo existe para que cualquier agente (otra ses
 
 - **Ficha tipo sala de exhibición** (rama `feat/listing-showroom`): datos de segunda mano nuevos (dueños, SOAT, revisión técnica, mantenimiento, llave, gravámenes, choques, descripción) en base (migración `0002`, columnas nulas), contrato, API, formulario `/vender` y `/anuncios/[id]` con modo detalle. Verificado: `pnpm check` y capturas locales a 1440, 820 y 390 px con API simulada. **Página `/ejemplo`:** galería de 5 autos de ejemplo con fotos gratuitas de Pexels y datos inventados (rotulados); cada uno abre su ficha en `/ejemplo/<slug>`. El flujo real (publicar → revisar → aprobar → `/autos`) se probó en el navegador el 2026-11-15 con un anuncio de prueba. **Sin verificar:** con sesión real en staging (el ingreso con Google depende del URI; el dueño ya lo registró el 2026-11-15, falta probarlo), el botón "Reservar visita" no hace nada (a propósito), y los datos declarados no se contrastan con un proveedor de historial.
 
+- **Rendimiento y menús (2026-11-15):** ver `13-bitacora.md`. `/autos` tiene filtro por departamento; el menú "Todo el Perú" lleva a él.
+
 ## Pendiente, en orden sugerido
 1. Obtener la captura de la web desplegada y corregir lo que falle.
 2. Registrar el URI de Google de arriba (paso del dueño en Google Cloud → Clientes).

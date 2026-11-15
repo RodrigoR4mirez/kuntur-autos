@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Showroom } from '../../../components/showroom.tsx';
@@ -24,7 +25,7 @@ export default async function EjemploFicha({ params }: { params: Params }) {
     <>
       <p className="hint" role="note">
         Ejemplo de ficha con datos inventados: no es un anuncio real.{' '}
-        <a href="/ejemplo">Ver los otros ejemplos</a>
+        <Link href="/ejemplo">Ver los otros ejemplos</Link>
       </p>
       <Showroom data={exampleShowroom(car)} photo={car.photo} />
     </>

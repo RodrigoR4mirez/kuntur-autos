@@ -56,6 +56,7 @@ export const searchListingsQuerySchema = z.object({
   brandId: z.coerce.number().int().positive().optional(),
   maxPriceMinor: z.coerce.number().int().positive().optional(),
   minYear: z.coerce.number().int().min(1950).max(2100).optional(),
+  department: z.string().trim().min(1).max(60).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(24),
   offset: z.coerce.number().int().min(0).default(0),
 });

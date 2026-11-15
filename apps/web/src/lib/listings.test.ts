@@ -82,4 +82,13 @@ describe('buildListingsQuery', () => {
     );
     expect([...empty.keys()]).toEqual(['limit']);
   });
+
+  it('only sends a department that exists in Peru', () => {
+    expect(new URLSearchParams(buildListingsQuery({ department: 'Cusco' })).get('department')).toBe(
+      'Cusco',
+    );
+    expect(
+      new URLSearchParams(buildListingsQuery({ department: 'Narnia' })).has('department'),
+    ).toBe(false);
+  });
 });
