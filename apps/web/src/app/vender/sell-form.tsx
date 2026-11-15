@@ -107,7 +107,7 @@ export function SellForm() {
         });
         return;
       }
-      window.location.href = `/anuncios/${body.id}`;
+      window.location.href = '/mis-anuncios';
     } catch {
       setMessage({ ok: false, text: 'Sin conexión con el servicio. Inténtalo de nuevo.' });
     } finally {

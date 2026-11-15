@@ -48,6 +48,10 @@ Sin secretos ni valores de configuración. Las fechas exactas solo se conocen do
 - Ficha del auto tipo sala de exhibición a pedido del dueño (referencia: auto central con tarjetas y modo detalle) y datos de segunda mano. Aprendido: un nombre de clase genérico (`.tile`) chocó con otro ya existente en `home.css` y estiró las tarjetas; se usó el prefijo `show-`. Las copias duplicadas de iCloud (archivos "… 2.ts") rompen `pnpm boundaries` en local: no se suben, se mueven fuera para verificar.
 - Entorno local: `pnpm` no estaba en el PATH; se usó `corepack pnpm` con un acceso directo temporal.
 
+## Flujo completo en staging (2026-11-15)
+- Ingreso con Google verificado en la web; rol `advisor` dado por el dueño en Neon (UPDATE sobre `"user"`, una fila). Flujo probado en el navegador: publicar → en revisión → aprobar en `/asesor` → aparece en `/autos` y su ficha real. Existe un anuncio de prueba ("Toyota Yaris 2019 de prueba", placa TST123) en la base de staging.
+- **Error encontrado:** tras enviar a revisión, el formulario llevaba a `/anuncios/<id>` y daba 404 (aún no aprobado). Ahora lleva a `/mis-anuncios`.
+
 ## Configuración que vive fuera del repositorio (sin valores)
 | Dónde | Qué | Quién |
 |---|---|---|
