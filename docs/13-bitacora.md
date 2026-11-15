@@ -52,6 +52,8 @@ Sin secretos ni valores de configuración. Las fechas exactas solo se conocen do
 - Ingreso con Google verificado en la web; rol `advisor` dado por el dueño en Neon (UPDATE sobre `"user"`, una fila). Flujo probado en el navegador: publicar → en revisión → aprobar en `/asesor` → aparece en `/autos` y su ficha real. Existe un anuncio de prueba ("Toyota Yaris 2019 de prueba", placa TST123) en la base de staging.
 - **Error encontrado:** tras enviar a revisión, el formulario llevaba a `/anuncios/<id>` y daba 404 (aún no aprobado). Ahora lleva a `/mis-anuncios`.
 
+- **Galería de ejemplo (2026-11-15):** 5 autos de ejemplo con fotos gratuitas de Pexels en `/ejemplo` (ver `04-marca.md`). Se descartaron fotos modificadas, verticales o de desierto por no parecerse a un auto en venta. Cada foto se bajó de la dirección pública de imágenes de Pexels (la página de Pexels bloquea las descargas automáticas).
+
 ## Configuración que vive fuera del repositorio (sin valores)
 | Dónde | Qué | Quién |
 |---|---|---|

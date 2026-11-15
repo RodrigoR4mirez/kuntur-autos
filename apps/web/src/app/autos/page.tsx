@@ -109,6 +109,11 @@ export default async function Autos({ searchParams }: { searchParams: Search }) 
           <a className="btn btn-primary" href={filtered ? '/autos' : '/vender'}>
             {filtered ? 'Ver todos' : 'Vender mi auto'}
           </a>
+          {!filtered && (
+            <p className="hint">
+              ¿Quieres ver cómo se ve? <a href="/ejemplo">Mira cinco autos de ejemplo</a>.
+            </p>
+          )}
         </section>
       ) : (
         <ul className="car-grid" aria-label="Resultados">
