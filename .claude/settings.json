@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "ClaudeInChromeDomain(kuntur-web-staging.politerock-80f1ef72.brazilsouth.azurecontainerapps.io)"
-    ]
-  }
-}
