@@ -3,6 +3,11 @@
  * (sin CORS) y la cookie de sesión queda en el dominio de la web. La dirección de la API se lee al
  * ejecutar, no al construir la imagen.
  */
+/**
+ * En staging la API escala a cero: la primera petición tras un rato sin uso debe despertar la API y
+ * la base (Neon), y puede pasar de los 15 s. Esperamos hasta 45 s y, si la conexión falla, un reintento.
+ */
+export const UPSTREAM_TIMEOUT_MS = 45000;
 const HOP_BY_HOP = ['host', 'connection', 'content-length', 'transfer-encoding', 'keep-alive'];
 
 export async function proxyToApi(
@@ -10,6 +15,7 @@ export async function proxyToApi(
   upstreamPath: string,
   baseUrl: string | undefined = process.env['KUNTUR_API_URL'],
   fetcher: typeof fetch = fetch,
+  timeoutMs: number = UPSTREAM_TIMEOUT_MS,
 ): Promise<Response> {
   if (!baseUrl) {
     return Response.json(
@@ -26,20 +32,36 @@ export async function proxyToApi(
   headers.set('x-forwarded-proto', incoming.protocol.replace(':', ''));
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
-  let upstream: Response;
-  try {
-    upstream = await fetcher(target, {
+  const body = hasBody ? await request.arrayBuffer() : undefined;
+  const send = () =>
+    fetcher(target, {
       method: request.method,
       headers,
-      ...(hasBody ? { body: await request.arrayBuffer() } : {}),
+      ...(body ? { body } : {}),
       redirect: 'manual',
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
+
+  let upstream: Response;
+  try {
+    upstream = await send();
   } catch {
-    return Response.json(
-      { error: { code: 'api_unreachable', message: 'No pudimos conectar con el servicio.' } },
-      { status: 502 },
-    );
+    // Un reintento solo si el método es seguro de repetir (no duplicar un POST).
+    const retryable = request.method === 'GET' || request.method === 'HEAD';
+    try {
+      if (!retryable) throw new Error('no reintentable');
+      upstream = await send();
+    } catch {
+      return Response.json(
+        {
+          error: {
+            code: 'api_unreachable',
+            message: 'El servicio está despertando. Inténtalo de nuevo en unos segundos.',
+          },
+        },
+        { status: 502 },
+      );
+    }
   }
 
   const out = new Headers();

@@ -40,6 +40,11 @@ Sin secretos ni valores de configuración. Las fechas exactas solo se conocen do
 - **Error de proceso:** la primera versión de la landing se empujó directo a `main`; desde entonces, solo rama y pull request.
 - Resultado: el dueño abrió la web desplegada y la calificó mal ("no funciona nada"); causa sin diagnosticar (ver `12-estado-y-siguientes-pasos.md`).
 
+## Diagnóstico de la web y arranque en frío (2026-11-15)
+- Revisada la web desplegada: estilos y fuentes bien; `/api/catalog/brands` dio 502 con la API dormida y 200 con la API despierta. Causa: escala a cero + espera de 15 s. Arreglo: 45 s, reintento de GET, mensaje claro.
+- El dueño pidió que el agente haga pull, pull request, fusión y revisión de Actions (regla en `CLAUDE.md`).
+- Entorno local: `pnpm` no estaba en el PATH; se usó `corepack pnpm` con un acceso directo temporal.
+
 ## Configuración que vive fuera del repositorio (sin valores)
 | Dónde | Qué | Quién |
 |---|---|---|
