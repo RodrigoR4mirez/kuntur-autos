@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { SiteHeader } from '../../components/site-header.tsx';
 import { currentUser } from '../../lib/session.ts';
 import { SellForm } from './sell-form.tsx';
 
@@ -10,7 +9,6 @@ export default async function Vender() {
   if (!(await currentUser())) redirect('/ingresar');
   return (
     <>
-      <SiteHeader />
       <main className="narrow">
         <h1 className="h-page">Publica tu auto</h1>
         <p className="lead-sm">

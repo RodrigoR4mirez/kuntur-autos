@@ -1,21 +1,38 @@
 import type { FastifyInstance } from 'fastify';
-import { createListingSchema, listingParamsSchema } from '@kuntur/contracts';
+import {
+  createListingSchema,
+  listingParamsSchema,
+  reviewListingSchema,
+  searchListingsQuerySchema,
+} from '@kuntur/contracts';
 import type {
   CreateDraftListing,
   DetermineAccessLevel,
   GetListingView,
+  ListMyListings,
+  ListPendingListings,
   ListingId,
+  ReviewListing,
+  SearchListings,
   SubmitListingForReview,
 } from '@kuntur/core';
 import { requireSession, sessionOf, type ResolveSession } from './auth.ts';
 import { apiError } from './errors.ts';
-import { toListingResponse } from './listing-presenter.ts';
+import {
+  toListingResponse,
+  toOwnerListingResponse,
+  toPendingListingResponse,
+} from './listing-presenter.ts';
 
 export interface ListingRouteDeps {
   readonly getListingView: GetListingView;
   readonly determineAccessLevel: DetermineAccessLevel;
   readonly createDraftListing: CreateDraftListing;
   readonly submitListingForReview: SubmitListingForReview;
+  readonly searchListings: SearchListings;
+  readonly listMyListings: ListMyListings;
+  readonly reviewListing: ReviewListing;
+  readonly listPendingListings: ListPendingListings;
   readonly resolveSession: ResolveSession;
 }
 
@@ -30,6 +47,95 @@ const CREATE_ERRORS: Record<string, string> = {
 
 /** Controladores delgados: validan la entrada, llaman al caso de uso y traducen el resultado a HTTP. */
 export function listingRoutes(app: FastifyInstance, deps: ListingRouteDeps): void {
+  // Listado público: solo publicados; el nivel de acceso nunca muestra la placa.
+  app.get('/listings', async (request, reply) => {
+    const query = searchListingsQuerySchema.safeParse(request.query);
+    if (!query.success) {
+      const field = query.error.issues[0]?.path.join('.') || 'consulta';
+      return reply.code(400).send(apiError('invalid_request', `Revisa el filtro "${field}".`));
+    }
+    const session = await sessionOf(request, deps.resolveSession);
+    const views = await deps.searchListings({
+      access: session ? 'registered' : 'anonymous',
+      filter: {
+        limit: query.data.limit,
+        offset: query.data.offset,
+        ...(query.data.brandId !== undefined ? { brandId: query.data.brandId } : {}),
+        ...(query.data.maxPriceMinor !== undefined
+          ? { maxPriceMinor: query.data.maxPriceMinor }
+          : {}),
+        ...(query.data.minYear !== undefined ? { minYear: query.data.minYear } : {}),
+      },
+    });
+    return {
+      items: views.map(toListingResponse),
+      limit: query.data.limit,
+      offset: query.data.offset,
+    };
+  });
+
+  // La persona de la sesión: la web lo usa para saber si puede ver el panel del asesor.
+  app.get('/me', async (request, reply) => {
+    const session = await requireSession(request, reply, deps.resolveSession);
+    if (!session) return reply;
+    return { userId: session.userId, role: session.role };
+  });
+
+  app.get('/me/listings', async (request, reply) => {
+    const session = await requireSession(request, reply, deps.resolveSession);
+    if (!session) return reply;
+    const mine = await deps.listMyListings({ ownerId: session.userId });
+    return { items: mine.map(toOwnerListingResponse) };
+  });
+
+  // Cola de revisión: solo asesores y administradores.
+  app.get('/review/listings', async (request, reply) => {
+    const session = await requireSession(request, reply, deps.resolveSession);
+    if (!session) return reply;
+    const result = await deps.listPendingListings({ reviewerRole: session.role });
+    if (!result.ok) {
+      return reply
+        .code(403)
+        .send(apiError('forbidden', 'Solo los asesores de Kuntur pueden revisar anuncios.'));
+    }
+    return { items: result.value.map(toPendingListingResponse) };
+  });
+
+  app.post('/listings/:id/review', async (request, reply) => {
+    const session = await requireSession(request, reply, deps.resolveSession);
+    if (!session) return reply;
+
+    const params = listingParamsSchema.safeParse(request.params);
+    const body = reviewListingSchema.safeParse(request.body);
+    if (!params.success || !body.success) {
+      return reply
+        .code(400)
+        .send(apiError('invalid_request', 'Indica el anuncio y la decisión (approve o reject).'));
+    }
+
+    const result = await deps.reviewListing({
+      listingId: params.data.id as ListingId,
+      reviewerRole: session.role,
+      decision: body.data.decision,
+    });
+    if (result.ok) return { id: result.value.id, status: result.value.status };
+
+    switch (result.error.code) {
+      case 'forbidden':
+        return reply
+          .code(403)
+          .send(apiError('forbidden', 'Solo los asesores de Kuntur pueden revisar anuncios.'));
+      case 'listing_not_found':
+        return reply.code(404).send(apiError('listing_not_found', 'No encontramos ese anuncio.'));
+      case 'invalid_transition':
+        return reply
+          .code(409)
+          .send(apiError('invalid_transition', 'Ese anuncio no está esperando revisión.'));
+      default:
+        return reply.code(422).send(apiError(result.error.code, 'No pudimos revisar el anuncio.'));
+    }
+  });
+
   app.get('/listings/:id', async (request, reply) => {
     const params = listingParamsSchema.safeParse(request.params);
     if (!params.success) {

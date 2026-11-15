@@ -40,8 +40,8 @@ packages/core/src/
   shared/                  núcleo compartido: ids, dinero, Result, puertos comunes (reloj, ids, avisos, archivos)
   modules/
     catalog/               catálogo cerrado: marcas, modelos, carrocerías, colores
-    listings/              anuncios: ciclo de vida, vehículo, crear borrador, enviar a revisión
-    storefront/            vitrina: qué ve cada visitante según su nivel de acceso y cómo se calcula (determineAccessLevel)
+    listings/              anuncios: ciclo de vida, vehículo, crear borrador, enviar a revisión, mis anuncios y revisión por asesor (aprobar o rechazar, `canReview`)
+    storefront/            vitrina: qué ve cada visitante según su nivel de acceso (determineAccessLevel), la ficha (getListingView) y el listado público con filtros (searchListings; nunca muestra la placa)
     accounts/              usuarios, sesión y su puerto SessionResolver, verificación de identidad (puertos)
     appointments/          citas con el asesor (modelo y puerto)
     payments/              pasarela de pagos (puerto)
@@ -125,6 +125,6 @@ Las pruebas del dominio, los casos de uso, la API y las suites de contrato con P
 - **SMS y validación de DNI** detrás de los puertos `Notifier` e `IdentityVerifier` (hay que elegir proveedor y crear cuenta).
 - **Proveedor de correo real** para producción (la configuración es solo `SMTP_URL` y `MAIL_FROM`) y dominio propio.
 - Repositorio de citas en PostgreSQL (llega con el depósito, Fase 2); hoy `determineAccessLevel` usa uno en memoria vacío, lo que es correcto mientras no se puedan crear citas.
-- Subida de fotos, búsqueda con filtros sobre PostgreSQL (el puerto y el índice parcial ya existen), moderación y panel de administración.
-- Web: buscador y listado de anuncios (la API aún no tiene `GET /listings`), fotos, panel del vendedor y del asesor, ingreso con correo.
+- Subida de fotos, búsqueda por texto y por modelo, y panel de administración. Hecho: filtros por marca, precio y año sobre PostgreSQL, y revisión básica.
+- Web: fotos reales de los autos (hoy hay una ilustración provisional), editar un anuncio, panel del asesor con la ficha completa y motivo de rechazo, ingreso con correo. Hecho: listado y filtros (`/autos`), mis anuncios, panel del asesor básico.
 - Curar el catálogo inicial (versiones, modelos faltantes): hoy es una muestra de 12 marcas y 70 modelos.

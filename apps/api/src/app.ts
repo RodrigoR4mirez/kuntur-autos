@@ -6,6 +6,10 @@ import type {
   GetListingView,
   ListBrands,
   ListModelsOfBrand,
+  ListMyListings,
+  ListPendingListings,
+  ReviewListing,
+  SearchListings,
   SubmitListingForReview,
 } from '@kuntur/core';
 import type { ResolveSession } from './interface/http/auth.ts';
@@ -22,6 +26,10 @@ export interface UseCases {
   readonly determineAccessLevel: DetermineAccessLevel;
   readonly createDraftListing: CreateDraftListing;
   readonly submitListingForReview: SubmitListingForReview;
+  readonly searchListings: SearchListings;
+  readonly listMyListings: ListMyListings;
+  readonly reviewListing: ReviewListing;
+  readonly listPendingListings: ListPendingListings;
   /** Convierte el token de la petición en sesión (puerto SessionResolver). */
   readonly resolveSession: ResolveSession;
   /** Rutas de inicio de sesión (/auth/*) del proveedor de autenticación. Ausente = sin inicio de sesión. */

@@ -1,5 +1,14 @@
-import { eq } from 'drizzle-orm';
-import type { Listing, ListingId, ListingRepository, UserId, VehicleDetails } from '@kuntur/core';
+import { and, asc, desc, eq, gte, lte, type SQL } from 'drizzle-orm';
+import type {
+  Listing,
+  ListingId,
+  ListingRepository,
+  ListingStatus,
+  ListingWithVehicle,
+  PublishedListingsFilter,
+  UserId,
+  VehicleDetails,
+} from '@kuntur/core';
 import type { Db } from './db.ts';
 import { listings, vehicleDetails } from './schema.ts';
 
@@ -55,6 +64,43 @@ export class PostgresListingRepository implements ListingRepository {
       .where(eq(vehicleDetails.listingId, id))
       .limit(1);
     return row ? toVehicle(row) : null;
+  }
+
+  async findPublished(filter: PublishedListingsFilter): Promise<ListingWithVehicle[]> {
+    const conditions: SQL[] = [eq(listings.status, 'published')];
+    if (filter.brandId !== undefined) conditions.push(eq(vehicleDetails.brandId, filter.brandId));
+    if (filter.maxPriceMinor !== undefined)
+      conditions.push(lte(listings.priceMinor, filter.maxPriceMinor));
+    if (filter.minYear !== undefined) conditions.push(gte(vehicleDetails.year, filter.minYear));
+
+    const rows = await this.db
+      .select({ listing: listings, vehicle: vehicleDetails })
+      .from(listings)
+      .innerJoin(vehicleDetails, eq(vehicleDetails.listingId, listings.id))
+      .where(and(...conditions))
+      .orderBy(desc(listings.createdAt), asc(listings.id))
+      .limit(filter.limit)
+      .offset(filter.offset);
+    return rows.map((r) => ({ listing: toListing(r.listing), vehicle: toVehicle(r.vehicle) }));
+  }
+
+  async findByOwner(ownerId: UserId): Promise<Listing[]> {
+    const rows = await this.db
+      .select()
+      .from(listings)
+      .where(eq(listings.ownerId, ownerId))
+      .orderBy(desc(listings.createdAt), asc(listings.id));
+    return rows.map(toListing);
+  }
+
+  async findByStatus(status: ListingStatus, limit: number): Promise<Listing[]> {
+    const rows = await this.db
+      .select()
+      .from(listings)
+      .where(eq(listings.status, status))
+      .orderBy(asc(listings.createdAt), asc(listings.id))
+      .limit(limit);
+    return rows.map(toListing);
   }
 
   async save(listing: Listing, vehicle?: VehicleDetails): Promise<void> {

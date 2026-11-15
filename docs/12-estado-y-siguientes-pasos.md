@@ -23,12 +23,13 @@ Actualizado: 2026-11-15. Este archivo existe para que cualquier agente (otra ses
 ## Diagnóstico de la web (2026-11-15, verificado con curl y `gh`)
 - La web carga con estilos, fuentes y marca; la API directa responde; el último despliegue (`d445ffc`) fue verde con prueba de humo.
 - El "no funciona" tenía como causa técnica un **arranque en frío**: en staging la API escala a cero y la primera petición tardó más de 15 s, el reenvío daba 502 `api_unreachable`. Con la API despierta, `/api/catalog/brands` da 200 en ~0,4 s. Corregido: espera de 45 s, un reintento en GET y mensaje claro (`apps/web/src/lib/proxy.ts`).
-- Sigue sin verificar: captura móvil, ingreso con Google (falta el URI en Google Cloud) y el rediseño visual.
+- **Rediseño total (2ª versión, rama `feat/web-redesign`)** según la referencia del dueño: paneles, Negro Cóndor, barra lateral y auto protagonista (ver `04-marca.md`). Responsivo: probado con capturas a 390, 820 y 1440 px en Chrome. **Sin verificar:** otros navegadores, un dispositivo físico, LCP/CLS medidos (no se corrió Lighthouse) e ingreso con Google (falta el URI en Google Cloud).
+- **Módulos nuevos:** listado público con filtros (`GET /listings`, pantalla `/autos`), "Mis anuncios" (`/mis-anuncios`, enviar a revisión) y revisión por asesor (`/asesor`, aprobar o rechazar). Sin un asesor no se publica nada: ver `10-runbook.md` sección 11 (**no ejecutado todavía**).
 
 ## Pendiente, en orden sugerido
 1. Obtener la captura de la web desplegada y corregir lo que falle.
 2. Registrar el URI de Google de arriba (paso del dueño en Google Cloud → Clientes).
-3. Listado y búsqueda de autos: la API no tiene `GET /listings` (falta caso de uso, consulta en PostgreSQL con filtros, ruta y pantalla).
+3. Dar el rol de asesor a una cuenta (runbook sección 11) y probar de punta a punta: publicar → enviar a revisión → aprobar → verlo en `/autos`. Luego: fotos reales, editar anuncio y búsqueda por texto.
 4. Fotos, moderación y panel del asesor; citas con repositorio PostgreSQL; depósito de S/ 10 (requiere cuenta de pasarela, p. ej. Culqi).
 5. Correo (SMTP_URL + MAIL_FROM), SMS y validación de DNI: el dueño debe elegir proveedor y crear cuentas.
 6. Producción: primera puesta en marcha (ver `10-runbook.md`, sección 10). Nunca se ha ejecutado.

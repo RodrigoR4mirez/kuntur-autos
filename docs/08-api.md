@@ -31,9 +31,17 @@ Las rutas protegidas esperan `Authorization: Bearer <token>`. El token se convie
 | `GET /catalog/brands` | no | Marcas | 200 |
 | `GET /catalog/brands/:id/models` | no | Modelos de una marca | 200, 400 id inválido, 404 marca desconocida |
 | `GET /catalog/options` | no | Carrocerías y colores | 200 |
+| `GET /listings` | opcional | **Listado público**: solo anuncios publicados, del más reciente al más antiguo. Query opcional: `brandId`, `maxPriceMinor` (céntimos), `minYear`, `limit` (1 a 50, por defecto 24), `offset`. Nunca incluye la placa ni al dueño; con sesión agrega los campos de nivel `registered` | 200 `{items, limit, offset}`, 400 filtro inválido |
+| `GET /me` | **sí** | La persona de la sesión: `{userId, role}` | 200, 401 |
+| `GET /me/listings` | **sí** | Mis anuncios en cualquier estado (borrador, en revisión, publicado, rechazado...) | 200 `{items}`, 401 |
+| `GET /review/listings` | **sí, asesor o admin** | Cola de revisión: anuncios `pending_review` del más antiguo al más reciente, **con los datos del vehículo y la placa** | 200 `{items}`, 401, 403 |
+| `POST /listings/:id/review` | **sí, asesor o admin** | Cuerpo `{"decision":"approve"|"reject"}`. Aprobar publica el anuncio; rechazar lo marca `rejected` | 200 `{id, status}`, 400, 401, 403, 404, 409 no está en revisión |
 | `GET /listings/:id` | opcional | Ficha de un anuncio **publicado**, con los campos que permite el nivel de acceso | 200, 400, 404 |
 | `POST /listings` | **sí** | Crea un borrador. El dueño es la persona de la sesión | 201 `{id, status}`, 400 forma inválida, 401, 422 regla de negocio |
 | `POST /listings/:id/submit` | **sí** | Envía el borrador a revisión (solo su dueño) | 200 `{id, status}`, 401, 403 no es el dueño, 404, 409 estado no permitido |
+
+### Roles y revisión
+El rol vive en `user.role` (`buyer` por defecto; `seller`, `dealer`, `advisor`, `admin`). **Nadie puede asignárselo desde la API**: el campo no acepta entrada del cliente. Solo `advisor` y `admin` revisan anuncios (regla en `canReview`, núcleo). Hoy el rol de asesor se asigna a mano en la base (ver `10-runbook.md`, sección 11). Un vendedor **no** puede aprobar su propio anuncio: tiene rol `buyer` o `seller`.
 
 ### Nivel de acceso en `GET /listings/:id`
 Se calcula en el servidor para cada petición (`determineAccessLevel`):

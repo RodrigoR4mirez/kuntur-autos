@@ -85,3 +85,5 @@ export function transition(listing: Listing, to: ListingStatus): Result<Listing,
 }
 
 export const submitForReview = (listing: Listing) => transition(listing, 'pending_review');
+export const publish = (listing: Listing) => transition(listing, 'published');
+export const reject = (listing: Listing) => transition(listing, 'rejected');

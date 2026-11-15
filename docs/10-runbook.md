@@ -140,3 +140,16 @@ Detalle en `06-ci-cd.md`, sección "Producción". Resumen operativo:
 **Nunca:** desplegar producción desde una rama que no sea `main`; saltarse la compuerta; reutilizar secretos de staging.
 
 **Verificado:** la lógica de la compuerta tiene pruebas; el flujo de producción pasa el esquema de GitHub y las reglas de `pnpm workflows` y `pnpm delivery`. **No verificado:** ninguna ejecución real de producción todavía.
+
+## 11. Asesores: cómo dar el rol (revisión de anuncios)
+
+Sin un asesor, **ningún anuncio llega a publicarse** (el listado público solo muestra anuncios aprobados). El rol vive en la columna `role` de la tabla `"user"` y la API no permite asignárselo a uno mismo.
+
+1. La persona inicia sesión una vez con Google (así existe su usuario).
+2. En Neon → **SQL Editor** (base de staging), ejecuta con el correo de esa persona:
+   ```sql
+   UPDATE "user" SET role = 'advisor' WHERE email = 'correo@ejemplo.com';
+   ```
+3. La persona cierra sesión y vuelve a entrar. En **Mis anuncios** aparece el enlace al panel (`/asesor`).
+
+**No verificado:** este procedimiento no se ha ejecutado en la base real. Para producción usa la base de producción, nunca la de staging.

@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { SiteHeader } from '../../../components/site-header.tsx';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +40,6 @@ export default async function Anuncio({ params }: { params: Promise<{ id: string
 
   return (
     <>
-      <SiteHeader />
       <main className="narrow">
         <h1 className="h-page">{listing.title}</h1>
         <p className="price">{price}</p>
@@ -57,7 +55,7 @@ export default async function Anuncio({ params }: { params: Promise<{ id: string
             {listing.plate}
           </p>
         ) : (
-          <p className="hint">La placa se muestra al iniciar sesión.</p>
+          <p className="hint">La placa se muestra cuando reservas tu visita con un asesor.</p>
         )}
       </main>
     </>
