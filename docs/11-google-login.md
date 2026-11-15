@@ -85,3 +85,7 @@ La prueba con `curl` no basta: el inicio debe empezar en el navegador para que l
 - Lecciones: (1) el inicio **debe empezar en el navegador**; un enlace generado con `curl` no puede completar el proceso, por falta de la cookie de estado. (2) Si el despliegue no incluye las rutas `/auth/*`, la API responde `not_found`: revisa que la imagen en Azure sea la última.
 
 **Aún sin verificar:** el cierre de sesión, la recuperación de contraseña y el uso de la sesión desde otra aplicación (ver `09-autenticacion.md`, Pendiente).
+
+## Con la web desplegada (cambia el `redirect_uri`)
+
+Cuando existe `kuntur-web-<entorno>`, el inicio de sesión vive en la **web**: Google debe volver a `https://<web>/auth/callback/google` (la web lo reenvía a la API). Agrega ese URI al cliente de Google (el flujo **Infraestructura Azure** lo imprime como `googleRedirectUri`). El URI de la API deja de usarse. Pasos completos en `10-runbook.md`, sección 9b.

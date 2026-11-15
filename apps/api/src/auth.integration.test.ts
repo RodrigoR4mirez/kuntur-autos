@@ -169,6 +169,33 @@ describe('inicio de sesión por correo (Better Auth + PostgreSQL + API)', () => 
     expect(created.json()).toMatchObject({ status: 'draft' });
   });
 
+  it('acepta la cookie de sesión (la web) igual que el token Bearer', async () => {
+    const { app, post, registerVerifyAndSignIn } = await setup({ mailer: true });
+    await registerVerifyAndSignIn('ana@example.com');
+    const signIn = await post('/auth/sign-in/email', {
+      email: 'ana@example.com',
+      password: PASSWORD,
+    });
+    const cookies = signIn.cookies.map((c) => `${c.name}=${encodeURIComponent(c.value)}`);
+    expect(cookies.length).toBeGreaterThan(0);
+
+    const created = await app.inject({
+      method: 'POST',
+      url: '/listings',
+      headers: { cookie: cookies.join('; ') },
+      payload: listingBody,
+    });
+    expect(created.statusCode).toBe(201);
+
+    const forged = await app.inject({
+      method: 'POST',
+      url: '/listings',
+      headers: { cookie: 'better-auth.session_token=inventada.firma' },
+      payload: listingBody,
+    });
+    expect(forged.statusCode).toBe(401);
+  });
+
   it('rechaza contraseña incorrecta y tokens inventados', async () => {
     const { app, post, registerVerifyAndSignIn } = await setup({ mailer: true });
     await registerVerifyAndSignIn('ana@example.com');

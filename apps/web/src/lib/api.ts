@@ -1,7 +1,7 @@
 /** Acceso a la API de Kuntur desde el servidor de la web. La interfaz nunca asume que la API responde. */
 
 export interface Brand {
-  readonly id: string;
+  readonly id: number;
   readonly name: string;
 }
 
@@ -15,7 +15,7 @@ export function parseBrands(payload: unknown): Brand[] {
     if (
       typeof item === 'object' &&
       item !== null &&
-      typeof (item as Brand).id === 'string' &&
+      typeof (item as Brand).id === 'number' &&
       typeof (item as Brand).name === 'string'
     ) {
       result.push({ id: (item as Brand).id, name: (item as Brand).name });

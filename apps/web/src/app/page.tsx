@@ -1,3 +1,4 @@
+import { SiteHeader } from '../components/site-header.tsx';
 import { fetchBrands } from '../lib/api.ts';
 
 const steps = [
@@ -15,20 +16,13 @@ const steps = [
   },
 ];
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const brands = await fetchBrands();
   return (
     <>
-      <header className="bar">
-        <a className="brand" href="/" aria-label="Kuntur Autos, inicio">
-          <img src="/icon.svg" width={36} height={36} alt="" />
-          <span>Kuntur Autos</span>
-        </a>
-        <nav aria-label="Principal">
-          <a href="#como-funciona">Cómo funciona</a>
-          <a href="#confianza">Confianza</a>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <main>
         <section className="hero">

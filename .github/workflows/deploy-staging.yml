@@ -42,6 +42,7 @@ jobs:
       attestations: write
     outputs:
       image: ${{ steps.ref.outputs.image }}
+      web_image: ${{ steps.web_ref.outputs.image }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -94,6 +95,49 @@ jobs:
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
 
+      - name: Nombre de la imagen de la web
+        id: web_name
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/kuntur-autos-web" >> "$GITHUB_OUTPUT"
+      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        id: web_meta
+        with:
+          images: ${{ steps.web_name.outputs.image }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=staging
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        id: web_build
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.web_meta.outputs.tags }}
+          labels: ${{ steps.web_meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+      - name: Referencia inmutable de la imagen de la web
+        id: web_ref
+        env:
+          IMAGE: ${{ steps.web_name.outputs.image }}
+          DIGEST: ${{ steps.web_build.outputs.digest }}
+        run: echo "image=${IMAGE}@${DIGEST}" >> "$GITHUB_OUTPUT"
+      - name: Escanear la imagen de la web
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.web_ref.outputs.image }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+      - name: Atestar el origen de la imagen de la web
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ steps.web_name.outputs.image }}
+          subject-digest: ${{ steps.web_build.outputs.digest }}
+          push-to-registry: true
+
+
   deploy:
     name: Desplegar a staging
     needs: build
@@ -122,6 +166,11 @@ jobs:
           resource_group: rg-kuntur-staging
           app_name: kuntur-api-staging
           database_url: ${{ secrets.DATABASE_URL }}
+      - uses: ./.github/actions/deploy-web
+        with:
+          image: ${{ needs.build.outputs.web_image }}
+          resource_group: rg-kuntur-staging
+          app_name: kuntur-web-staging
 
   not-configured:
     name: Despliegue no configurado

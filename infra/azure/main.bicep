@@ -15,6 +15,12 @@ param appName string = 'kuntur-api-${environmentName}'
 @description('Imagen de la API. Mejor con digest: ghcr.io/<dueño>/kuntur-autos-api@sha256:...')
 param image string
 
+@description('Nombre de la Container App de la web.')
+param webAppName string = 'kuntur-web-${environmentName}'
+
+@description('Imagen de la web. Vacía = no se crea la web (la API sigue como antes). Mejor con digest.')
+param webImage string = ''
+
 @secure()
 @description('Cadena de conexión de PostgreSQL (Neon). Se guarda como secreto de la app.')
 param databaseUrl string
@@ -23,7 +29,7 @@ param databaseUrl string
 @description('Secreto de sesiones (mínimo 32 caracteres). Vacío = inicio de sesión desactivado y todos anónimos.')
 param authSecret string = ''
 
-@description('URL pública de la API. Vacía = se calcula con el dominio de Container Apps.')
+@description('URL pública para el inicio de sesión. Vacía = la de la web si existe, y si no, la de la API.')
 param authBaseUrl string = ''
 
 @description('Orígenes de la web autorizados, separados por comas.')
@@ -82,7 +88,14 @@ resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
 }
 
 // El dominio de la app es <nombre>.<dominio del entorno>; se calcula aquí para no depender de un paso manual.
-var computedBaseUrl = empty(authBaseUrl) ? 'https://${appName}.${managedEnvironment.properties.defaultDomain}' : authBaseUrl
+var apiUrl = 'https://${appName}.${managedEnvironment.properties.defaultDomain}'
+var webUrl = 'https://${webAppName}.${managedEnvironment.properties.defaultDomain}'
+// Con web, el navegador habla solo con la web (que reenvía a la API): la cookie de sesión queda en su dominio
+// y Google debe volver a la web. Sin web, todo sigue en la API.
+var computedBaseUrl = !empty(authBaseUrl) ? authBaseUrl : (empty(webImage) ? apiUrl : webUrl)
+var computedTrustedOrigins = empty(webImage)
+  ? authTrustedOrigins
+  : (empty(authTrustedOrigins) ? webUrl : '${authTrustedOrigins},${webUrl}')
 
 var appSecrets = concat(
   [
@@ -149,7 +162,7 @@ var appEnv = concat(
         }
         {
           name: 'AUTH_TRUSTED_ORIGINS'
-          value: authTrustedOrigins
+          value: computedTrustedOrigins
         }
       ],
   empty(googleClientSecret)
@@ -243,7 +256,81 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
+resource web 'Microsoft.App/containerApps@2024-03-01' = if (!empty(webImage)) {
+  name: webAppName
+  location: location
+  properties: {
+    managedEnvironmentId: managedEnvironment.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: {
+        external: true
+        targetPort: 3000
+        transport: 'auto'
+        allowInsecure: false
+      }
+    }
+    template: {
+      containers: [
+        {
+          name: 'web'
+          image: webImage
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+          env: [
+            {
+              name: 'PORT'
+              value: '3000'
+            }
+            {
+              name: 'KUNTUR_API_URL'
+              value: apiUrl
+            }
+          ]
+          probes: [
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/ingresar'
+                port: 3000
+              }
+              initialDelaySeconds: 5
+              periodSeconds: 20
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/ingresar'
+                port: 3000
+              }
+              initialDelaySeconds: 3
+              periodSeconds: 10
+            }
+          ]
+        }
+      ]
+      scale: {
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
+        rules: [
+          {
+            name: 'http'
+            http: {
+              metadata: {
+                concurrentRequests: '50'
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+
 output url string = 'https://${api.properties.configuration.ingress.fqdn}'
 output appName string = api.name
 output authBaseUrl string = computedBaseUrl
+output webUrl string = empty(webImage) ? '' : webUrl
 output googleRedirectUri string = '${computedBaseUrl}/auth/callback/google'
