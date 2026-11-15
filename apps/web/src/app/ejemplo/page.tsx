@@ -7,14 +7,14 @@ export const metadata: Metadata = { title: 'Ejemplo de ficha · Kuntur Autos' };
 /** Datos inventados para mostrar cómo se ve una ficha. No es un anuncio real. */
 const EXAMPLE: ListingDetail = {
   id: 'ejemplo',
-  title: 'Toyota Yaris 1.5 Sport 2019',
-  price: { amountMinor: 5_290_000, currency: 'PEN' },
+  title: 'Chevrolet Bel Air 1957',
+  price: { amountMinor: 8_500_000, currency: 'PEN' },
   department: 'Lima',
   city: 'Miraflores',
-  year: 2019,
-  mileageKm: 54_000,
+  year: 1957,
+  mileageKm: 82_000,
   access: 'registered',
-  transmission: 'automatic',
+  transmission: 'manual',
   fuel: 'gasoline',
   bodyTypeId: 1,
   colorId: 1,
@@ -25,20 +25,27 @@ const EXAMPLE: ListingDetail = {
   hasSpareKey: true,
   hasLiens: false,
   hasAccidents: false,
-  description: 'Ejemplo: único dueño, mantenimiento en concesionaria y llantas nuevas.',
+  description: 'Ejemplo: clásico restaurado, motor V8 original y llantas de franja blanca.',
 };
 
 export default function Ejemplo() {
   const data = buildShowroom(EXAMPLE, {
-    bodyTypes: [{ id: 1, name: 'Sedán' }],
-    colors: [{ id: 1, name: 'Gris grafito' }],
+    bodyTypes: [{ id: 1, name: 'Clásico' }],
+    colors: [{ id: 1, name: 'Rojo' }],
   });
   return (
     <>
       <p className="hint" role="note">
         Ejemplo de ficha con datos inventados: no es un anuncio real.
       </p>
-      <Showroom data={data} />
+      <Showroom
+        data={data}
+        photo={{
+          src: '/ejemplo/chevrolet-1957.jpg',
+          alt: 'Chevrolet Bel Air rojo de 1957 en una exhibición de autos clásicos',
+          credit: 'Foto de ejemplo de Pexels (licencia gratuita). No es un anuncio real.',
+        }}
+      />
     </>
   );
 }
