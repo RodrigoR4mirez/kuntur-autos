@@ -81,7 +81,7 @@ describe('CSS de la web', () => {
     expect(show).toMatch(/\.show-focus \.show-info\s*{[^}]*visibility:\s*hidden/);
     expect(show).not.toMatch(/\.show-focus[^{]*{[^}]*display:\s*none/);
     expect(show).toContain('prefers-reduced-motion: reduce');
-    expect(show).toContain('@media (min-width: 64rem)');
+    expect(show).toContain('@media (min-width: 80rem)');
   });
   it('respeta prefers-reduced-motion', () => {
     expect(css).toContain('prefers-reduced-motion: reduce');
