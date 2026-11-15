@@ -721,6 +721,17 @@ h1 {
   top: var(--space-3);
   left: var(--space-3);
 }
+.car-card-photo-img {
+  display: block;
+  padding: 0;
+}
+.car-card-photo-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
 .car-card-photo small {
   justify-self: center;
   color: var(--t-text-muted);

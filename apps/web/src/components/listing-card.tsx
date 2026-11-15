@@ -2,13 +2,32 @@ import { formatMoney, type ListingCardData } from '../lib/listings.ts';
 import { CarArt } from './car-art.tsx';
 import { IconArrow } from './icons.tsx';
 
-export function ListingCard({ item }: { item: ListingCardData }) {
+export interface CardPhoto {
+  readonly src: string;
+  readonly alt: string;
+}
+
+export function ListingCard({
+  item,
+  photo,
+  href,
+}: {
+  item: ListingCardData;
+  photo?: CardPhoto;
+  href?: string;
+}) {
   return (
-    <a className="car-card" href={`/anuncios/${encodeURIComponent(item.id)}`}>
-      <div className="car-card-photo">
+    <a className="car-card" href={href ?? `/anuncios/${encodeURIComponent(item.id)}`}>
+      <div className={`car-card-photo${photo ? ' car-card-photo-img' : ''}`}>
         <span className="chip">{item.year}</span>
-        <CarArt />
-        <small>Fotos próximamente</small>
+        {photo ? (
+          <img src={photo.src} alt={photo.alt} width={1400} height={934} loading="lazy" />
+        ) : (
+          <>
+            <CarArt />
+            <small>Fotos próximamente</small>
+          </>
+        )}
       </div>
       <div className="car-card-body">
         <h3>{item.title}</h3>
