@@ -54,7 +54,7 @@ describe('contraste AA de la web', () => {
 });
 
 describe('CSS de la web', () => {
-  const css = read('./app/globals.css') + read('./app/home.css');
+  const css = read('./app/globals.css') + read('./app/home.css') + read('./app/showroom.css');
 
   it('el botón principal y el sello usan los tokens de la marca', () => {
     expect(css).toMatch(/\.btn-primary\s*{[^}]*var\(--t-action\)/);
@@ -75,6 +75,13 @@ describe('CSS de la web', () => {
   it('los paneles oscuros usan el Negro Cóndor del token, no un color suelto', () => {
     expect(css).toMatch(/\.panel-dark\s*{[^}]*var\(--t-ink\)/);
     expect(css).toMatch(/\.btn-dark\s*{[^}]*var\(--t-ink\)/);
+  });
+  it('la ficha oculta las tarjetas sin mover el diseño (modo detalle)', () => {
+    const show = read('./app/showroom.css');
+    expect(show).toMatch(/\.show-focus \.show-info\s*{[^}]*visibility:\s*hidden/);
+    expect(show).not.toMatch(/\.show-focus[^{]*{[^}]*display:\s*none/);
+    expect(show).toContain('prefers-reduced-motion: reduce');
+    expect(show).toContain('@media (min-width: 64rem)');
   });
   it('respeta prefers-reduced-motion', () => {
     expect(css).toContain('prefers-reduced-motion: reduce');

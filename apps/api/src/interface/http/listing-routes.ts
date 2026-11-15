@@ -43,6 +43,8 @@ const CREATE_ERRORS: Record<string, string> = {
   invalid_year: 'El año del vehículo no es válido.',
   invalid_mileage: 'El kilometraje no es válido.',
   invalid_plate: 'La placa debe tener 6 letras o números.',
+  invalid_owners: 'El número de dueños anteriores no es válido.',
+  invalid_description: 'La descripción es demasiado larga (máximo 1000 caracteres).',
 };
 
 /** Controladores delgados: validan la entrada, llaman al caso de uso y traducen el resultado a HTTP. */

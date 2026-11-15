@@ -19,6 +19,28 @@ describe('projectVehicleListing', () => {
     expect(view).not.toHaveProperty('transmission');
     expect(view).not.toHaveProperty('colorId');
     expect(view).not.toHaveProperty('plate');
+    for (const field of [
+      'previousOwners',
+      'soatValid',
+      'hasLiens',
+      'hasAccidents',
+      'description',
+    ]) {
+      expect(view).not.toHaveProperty(field);
+    }
+  });
+
+  it('shows the declared second-hand data to registered users', () => {
+    expect(projectVehicleListing(listing, vehicle, 'registered')).toMatchObject({
+      previousOwners: 1,
+      hasServiceHistory: true,
+      soatValid: true,
+      technicalReviewValid: true,
+      hasSpareKey: true,
+      hasLiens: false,
+      hasAccidents: false,
+      description: 'Único dueño, mantenimiento en concesionaria.',
+    });
   });
 
   it('adds the full spec for registered users but still hides the plate', () => {

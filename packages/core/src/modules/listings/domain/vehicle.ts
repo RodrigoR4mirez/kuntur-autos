@@ -17,12 +17,26 @@ export interface VehicleDetails {
   readonly fuel: Fuel;
   /** Placa normalizada: 6 caracteres en mayúsculas, sin guion. */
   readonly plate: string;
+  // Declarado por el vendedor y verificado por el asesor al revisar. `null` = no informado.
+  readonly previousOwners: number | null;
+  readonly hasServiceHistory: boolean | null;
+  readonly soatValid: boolean | null;
+  readonly technicalReviewValid: boolean | null;
+  readonly hasSpareKey: boolean | null;
+  readonly hasLiens: boolean | null;
+  readonly hasAccidents: boolean | null;
+  readonly description: string | null;
 }
 
 export type VehicleError =
   | { readonly code: 'invalid_year' }
   | { readonly code: 'invalid_mileage' }
-  | { readonly code: 'invalid_plate' };
+  | { readonly code: 'invalid_plate' }
+  | { readonly code: 'invalid_owners' }
+  | { readonly code: 'invalid_description' };
+
+export const MAX_DESCRIPTION_LENGTH = 1000;
+const MAX_OWNERS = 20;
 
 const FIRST_YEAR = 1950;
 
@@ -42,5 +56,12 @@ export function validateVehicle(
     return err({ code: 'invalid_mileage' });
   }
   if (!/^[A-Z0-9]{6}$/.test(details.plate)) return err({ code: 'invalid_plate' });
+  const owners = details.previousOwners;
+  if (owners !== null && (!Number.isInteger(owners) || owners < 0 || owners > MAX_OWNERS)) {
+    return err({ code: 'invalid_owners' });
+  }
+  if (details.description !== null && details.description.length > MAX_DESCRIPTION_LENGTH) {
+    return err({ code: 'invalid_description' });
+  }
   return ok(details);
 }

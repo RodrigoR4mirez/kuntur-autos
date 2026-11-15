@@ -24,6 +24,15 @@ export const vehicleInputSchema = z.strictObject({
   transmission: z.enum(['manual', 'automatic']),
   fuel: z.enum(['gasoline', 'diesel', 'lpg', 'gnv', 'hybrid', 'electric']),
   plate: plateSchema,
+  // Declarado por el vendedor; ausente o `null` = no informado. El asesor lo verifica al revisar.
+  previousOwners: z.number().int().min(0).max(20).nullable().default(null),
+  hasServiceHistory: z.boolean().nullable().default(null),
+  soatValid: z.boolean().nullable().default(null),
+  technicalReviewValid: z.boolean().nullable().default(null),
+  hasSpareKey: z.boolean().nullable().default(null),
+  hasLiens: z.boolean().nullable().default(null),
+  hasAccidents: z.boolean().nullable().default(null),
+  description: z.string().trim().max(1000).nullable().default(null),
 });
 
 /**

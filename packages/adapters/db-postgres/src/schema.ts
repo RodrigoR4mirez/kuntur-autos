@@ -177,6 +177,15 @@ export const vehicleDetails = pgTable(
     transmission: text('transmission').notNull(),
     fuel: text('fuel').notNull(),
     plate: text('plate').notNull(),
+    // Declarado por el vendedor; null = no informado. Columnas nulas: la migración es compatible.
+    previousOwners: smallint('previous_owners'),
+    hasServiceHistory: boolean('has_service_history'),
+    soatValid: boolean('soat_valid'),
+    technicalReviewValid: boolean('technical_review_valid'),
+    hasSpareKey: boolean('has_spare_key'),
+    hasLiens: boolean('has_liens'),
+    hasAccidents: boolean('has_accidents'),
+    description: text('description'),
   },
   (t) => [
     check('vehicle_transmission_check', sql`${t.transmission} in ('manual', 'automatic')`),
@@ -185,6 +194,10 @@ export const vehicleDetails = pgTable(
       sql`${t.fuel} in ('gasoline','diesel','lpg','gnv','hybrid','electric')`,
     ),
     check('vehicle_mileage_check', sql`${t.mileageKm} >= 0`),
+    check(
+      'vehicle_owners_check',
+      sql`${t.previousOwners} is null or (${t.previousOwners} >= 0 and ${t.previousOwners} <= 20)`,
+    ),
     // Coincide con el filtro más común: marca + modelo + año.
     index('vehicle_search_idx').on(t.brandId, t.modelId, t.year),
     index('vehicle_body_type_idx').on(t.bodyTypeId),

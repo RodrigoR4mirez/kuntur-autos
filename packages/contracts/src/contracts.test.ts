@@ -65,6 +65,24 @@ describe('createListingSchema', () => {
     },
   );
 
+  it('defaults the declared second-hand data to null when omitted', () => {
+    const parsed = createListingSchema.parse(valid);
+    expect(parsed.vehicle).toMatchObject({
+      previousOwners: null,
+      hasLiens: null,
+      description: null,
+    });
+  });
+
+  it('rejects impossible owners and an overlong description', () => {
+    const bad = (v: object) =>
+      createListingSchema.safeParse({ ...valid, vehicle: { ...valid.vehicle, ...v } });
+    expect(bad({ previousOwners: -1 }).success).toBe(false);
+    expect(bad({ previousOwners: 21 }).success).toBe(false);
+    expect(bad({ description: 'a'.repeat(1001) }).success).toBe(false);
+    expect(bad({ previousOwners: 2, hasLiens: true, description: 'ok' }).success).toBe(true);
+  });
+
   it('rejects ids that are not positive integers and unknown enums', () => {
     const bad = (v: object) =>
       createListingSchema.safeParse({ ...valid, vehicle: { ...valid.vehicle, ...v } });
