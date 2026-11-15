@@ -36,6 +36,7 @@ export class InMemoryListingRepository implements ListingRepository {
       if (filter.maxPriceMinor !== undefined && listing.price.amountMinor > filter.maxPriceMinor)
         continue;
       if (filter.minYear !== undefined && vehicle.year < filter.minYear) continue;
+      if (filter.department !== undefined && listing.department !== filter.department) continue;
       rows.push({ listing, vehicle });
     }
     rows.sort((a, b) => b.listing.createdAt.getTime() - a.listing.createdAt.getTime());

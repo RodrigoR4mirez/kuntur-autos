@@ -7,6 +7,8 @@ export interface PublishedListingsFilter {
   readonly brandId?: number;
   readonly maxPriceMinor?: number;
   readonly minYear?: number;
+  /** Departamento exacto (por ejemplo "Lima"). */
+  readonly department?: string;
   readonly limit: number;
   readonly offset: number;
 }

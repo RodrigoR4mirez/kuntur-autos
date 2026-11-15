@@ -99,6 +99,8 @@ export function listingRepositoryContract(
         expect(await ids({ brandId: 2 })).toEqual([id2]);
         expect(await ids({ maxPriceMinor: 2_000_000 })).toEqual([id2]);
         expect(await ids({ minYear: 2015 })).toEqual([id]);
+        expect(await ids({ department: 'Lima' })).toEqual([id, id2]);
+        expect(await ids({ department: 'Cusco' })).toEqual([]);
         expect(await ids({})).toEqual([id, id2]);
       });
 

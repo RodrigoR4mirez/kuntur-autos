@@ -67,6 +67,7 @@ export function listingRoutes(app: FastifyInstance, deps: ListingRouteDeps): voi
           ? { maxPriceMinor: query.data.maxPriceMinor }
           : {}),
         ...(query.data.minYear !== undefined ? { minYear: query.data.minYear } : {}),
+        ...(query.data.department !== undefined ? { department: query.data.department } : {}),
       },
     });
     return {

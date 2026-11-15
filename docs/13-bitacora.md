@@ -56,6 +56,12 @@ Sin secretos ni valores de configuración. Las fechas exactas solo se conocen do
 
 - **Error propio corregido:** `/ejemplo/<slug inexistente>` daba 500 en staging; ahora `dynamicParams = false` y responde 404 (verificado en un build de producción local; falta confirmarlo en staging tras el despliegue).
 
+## Rendimiento y menús (2026-11-15)
+- **Medido antes (staging):** páginas 0,35–0,6 s de primer byte (portada 1,5 s), fotos de 184 KB sin caché (`max-age=0`), menús como `<a>` normales (cada clic recargaba el documento) y "Todo el Perú" era un texto sin función.
+- **Hecho:** enlaces internos con `next/link`; fotos en WebP de 480/960/1400 px con `srcset` (tarjetas de ~200 KB a 16–32 KB); caché larga de 30 días para fotos e icono; las primeras tarjetas cargan sin retraso y el resto con `loading="lazy"`; catálogo con `Cache-Control` de 5 minutos en la API y caché de 5 minutos para las opciones de la ficha; filtro real por departamento (núcleo, PostgreSQL, API, `/autos`), el menú "Todo el Perú" lleva a ese filtro y el formulario de venta usa lista fija de departamentos.
+- **Base de datos:** revisada, sin cambios: ya hay índices (publicados, dueño, marca/modelo/año) y el listado es un solo `JOIN` con `LIMIT`. El tiempo de la primera consulta tras inactividad depende del autosuspendido de Neon (no se tocó).
+- **Pendiente de decisión del dueño:** `MIN_REPLICAS=1` en las variables del entorno `staging` de GitHub (y volver a ejecutar Infraestructura Azure) evita el arranque en frío; tiene un costo mensual pequeño. El agente no toca variables de GitHub.
+
 ## Configuración que vive fuera del repositorio (sin valores)
 | Dónde | Qué | Quién |
 |---|---|---|

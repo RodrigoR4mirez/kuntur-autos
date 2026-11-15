@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ActionButton } from '../../components/action-button.tsx';
 import { apiGet, formatMoney, parseOwnListings, STATUS_LABEL } from '../../lib/listings.ts';
@@ -32,13 +33,13 @@ export default async function MisAnuncios() {
             <h1 className="h-page">Mis anuncios</h1>
             <p className="lead-sm">Hola, {user.name}.</p>
           </div>
-          <a className="btn btn-primary btn-sm" href="/vender">
+          <Link className="btn btn-primary btn-sm" href="/vender">
             Publicar un auto
-          </a>
+          </Link>
         </div>
         {isReviewer && (
           <p className="hint">
-            Eres asesor de Kuntur: <a href="/asesor">abre el panel de revisión</a>.
+            Eres asesor de Kuntur: <Link href="/asesor">abre el panel de revisión</Link>.
           </p>
         )}
       </section>
@@ -55,9 +56,9 @@ export default async function MisAnuncios() {
         <section className="panel state">
           <h2>Todavía no publicaste nada</h2>
           <p>Cuéntanos de tu auto y lo verificamos con un asesor.</p>
-          <a className="btn btn-primary" href="/vender">
+          <Link className="btn btn-primary" href="/vender">
             Publicar mi primer auto
-          </a>
+          </Link>
         </section>
       ) : (
         <ul className="rows">
@@ -76,9 +77,9 @@ export default async function MisAnuncios() {
                   <ActionButton url={`/api/listings/${l.id}/submit`} label="Enviar a revisión" />
                 )}
                 {l.status === 'published' && (
-                  <a className="btn btn-ghost btn-sm" href={`/anuncios/${l.id}`}>
+                  <Link className="btn btn-ghost btn-sm" href={`/anuncios/${l.id}`}>
                     Ver anuncio
-                  </a>
+                  </Link>
                 )}
               </div>
             </li>

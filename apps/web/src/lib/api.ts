@@ -40,3 +40,23 @@ export async function fetchBrands(
     return [];
   }
 }
+
+/**
+ * Opciones del catálogo (carrocerías, colores) para la ficha. Cambian muy poco: se guardan 5
+ * minutos en el servidor de la web y no llevan la cookie del visitante.
+ */
+export async function fetchCatalogOptions(
+  baseUrl: string | undefined = process.env['KUNTUR_API_URL'],
+  fetcher: typeof fetch = fetch,
+): Promise<unknown> {
+  if (!baseUrl) return null;
+  try {
+    const response = await fetcher(new URL('/catalog/options', baseUrl), {
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(8000),
+    } as RequestInit);
+    return response.ok ? await response.json() : null;
+  } catch {
+    return null;
+  }
+}

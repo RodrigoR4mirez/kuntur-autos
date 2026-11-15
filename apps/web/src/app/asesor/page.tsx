@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ActionButton } from '../../components/action-button.tsx';
 import { apiGet, formatMoney, parsePendingListings } from '../../lib/listings.ts';
@@ -16,9 +17,9 @@ export default async function Asesor() {
         <section className="panel state">
           <h1 className="h-page">Solo para asesores</h1>
           <p>Tu cuenta no tiene permiso para revisar anuncios.</p>
-          <a className="btn btn-dark" href="/mis-anuncios">
+          <Link className="btn btn-dark" href="/mis-anuncios">
             Volver a mis anuncios
-          </a>
+          </Link>
         </section>
       </main>
     );

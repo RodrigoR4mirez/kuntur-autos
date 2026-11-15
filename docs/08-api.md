@@ -31,7 +31,7 @@ Las rutas protegidas esperan `Authorization: Bearer <token>`. El token se convie
 | `GET /catalog/brands` | no | Marcas | 200 |
 | `GET /catalog/brands/:id/models` | no | Modelos de una marca | 200, 400 id inválido, 404 marca desconocida |
 | `GET /catalog/options` | no | Carrocerías y colores | 200 |
-| `GET /listings` | opcional | **Listado público**: solo anuncios publicados, del más reciente al más antiguo. Query opcional: `brandId`, `maxPriceMinor` (céntimos), `minYear`, `limit` (1 a 50, por defecto 24), `offset`. Nunca incluye la placa ni al dueño; con sesión agrega los campos de nivel `registered` | 200 `{items, limit, offset}`, 400 filtro inválido |
+| `GET /listings` | opcional | **Listado público**: solo anuncios publicados, del más reciente al más antiguo. Query opcional: `brandId`, `maxPriceMinor` (céntimos), `minYear`, `department` (departamento exacto, por ejemplo `Lima`), `limit` (1 a 50, por defecto 24), `offset`. Nunca incluye la placa ni al dueño; con sesión agrega los campos de nivel `registered` | 200 `{items, limit, offset}`, 400 filtro inválido |
 | `GET /me` | **sí** | La persona de la sesión: `{userId, role}` | 200, 401 |
 | `GET /me/listings` | **sí** | Mis anuncios en cualquier estado (borrador, en revisión, publicado, rechazado...) | 200 `{items}`, 401 |
 | `GET /review/listings` | **sí, asesor o admin** | Cola de revisión: anuncios `pending_review` del más antiguo al más reciente, **con los datos del vehículo y la placa** | 200 `{items}`, 401, 403 |
@@ -84,3 +84,6 @@ Los campos de historial (`previousOwners` 0 a 20, los `has…`/`…Valid` boolea
 
 ## Cómo agregar una ruta
 Sigue los pasos de `05-arquitectura-limpia.md`. En la API: esquema en `packages/contracts`, ruta delgada en `apps/api/src/interface/http`, pruebas con `app.inject` en `app.test.ts`, y **esta tabla actualizada en el mismo commit**.
+
+## Caché
+Las rutas `GET /catalog/*` responden `Cache-Control: public, max-age=300, stale-while-revalidate=3600` (el catálogo casi no cambia). Ninguna otra ruta lleva caché: los anuncios y la sesión siempre se piden en vivo.

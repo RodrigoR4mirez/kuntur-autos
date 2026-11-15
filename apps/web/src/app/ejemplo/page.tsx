@@ -15,11 +15,11 @@ export default function Ejemplos() {
         </p>
       </section>
       <ul className="car-grid" aria-label="Autos de ejemplo">
-        {EXAMPLES.map((car) => {
+        {EXAMPLES.map((car, i) => {
           const c = exampleCardData(car);
           return (
             <li key={car.slug}>
-              <ListingCard item={c} photo={c.photo} href={c.href} />
+              <ListingCard item={c} photo={c.photo} href={c.href} eager={i < 4} />
             </li>
           );
         })}

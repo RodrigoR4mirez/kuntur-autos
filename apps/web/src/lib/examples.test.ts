@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { PHOTO_WIDTHS, photoVariant } from './photo.ts';
 import { EXAMPLES, exampleCardData, exampleShowroom, findExample } from './examples.ts';
 
 describe('autos de ejemplo', () => {
@@ -15,6 +16,14 @@ describe('autos de ejemplo', () => {
       expect(existsSync(resolve(import.meta.dirname, '../../public', `.${e.photo.src}`))).toBe(
         true,
       );
+      for (const w of PHOTO_WIDTHS) {
+        const file = resolve(
+          import.meta.dirname,
+          '../../public',
+          `.${photoVariant(e.photo.src, w)}`,
+        );
+        expect(existsSync(file)).toBe(true);
+      }
       expect(e.photo.alt.length).toBeGreaterThan(10);
       expect(e.photo.credit).toContain('No es un anuncio real');
     }

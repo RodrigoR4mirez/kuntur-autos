@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { currentUser } from '../lib/session.ts';
 import { IconPin } from './icons.tsx';
 import { NavLink } from './nav-link.tsx';
@@ -8,13 +9,13 @@ export async function SiteHeader() {
   const user = await currentUser();
   return (
     <>
-      <a className="logo-cell" href="/" aria-label="Kuntur Autos, inicio">
+      <Link className="logo-cell" href="/" aria-label="Kuntur Autos, inicio">
         <img src="/icon.svg" width={34} height={34} alt="" />
-      </a>
+      </Link>
       <header className="topbar">
-        <a className="brand-name" href="/" aria-hidden="true" tabIndex={-1}>
+        <Link className="brand-name" href="/" aria-hidden="true" tabIndex={-1}>
           Kuntur Autos
-        </a>
+        </Link>
         <nav className="tabs" aria-label="Secciones">
           <NavLink href="/" label="Descubrir" className="tab">
             {null}
@@ -30,24 +31,24 @@ export async function SiteHeader() {
           </NavLink>
         </nav>
         <div className="top-right">
-          <span className="pill pill-loc">
+          <Link className="pill pill-loc" href="/autos#filtros" title="Elegir departamento">
             <IconPin /> Todo el Perú
-          </span>
+          </Link>
           {user ? (
             <>
               <span className="pill who">{user.name}</span>
               <SignOutButton />
             </>
           ) : (
-            <a className="pill pill-solid" href="/ingresar">
+            <Link className="pill pill-solid" href="/ingresar">
               Ingresar
-            </a>
+            </Link>
           )}
-          <a className="btn btn-primary btn-sm" href="/vender">
+          <Link className="btn btn-primary btn-sm" href="/vender">
             <span>
               Vender<span className="nav-extra"> mi auto</span>
             </span>
-          </a>
+          </Link>
         </div>
       </header>
     </>

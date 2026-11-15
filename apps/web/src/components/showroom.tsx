@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import type { ShowroomData, Tile } from '../lib/showroom.ts';
+import { photoSrcSet } from '../lib/photo.ts';
 import { CarArt } from './car-art.tsx';
 
 function LockIcon() {
@@ -115,6 +117,8 @@ export function Showroom({ data, photo }: { data: ShowroomData; photo?: Showroom
               <img
                 className="show-photo"
                 src={photo.src}
+                srcSet={photoSrcSet(photo.src)}
+                sizes="(min-width: 80rem) 1230px, 100vw"
                 alt={photo.alt}
                 width={1400}
                 height={934}
@@ -180,7 +184,7 @@ export function Showroom({ data, photo }: { data: ShowroomData; photo?: Showroom
         <h2>Todo sobre este auto</h2>
         {!data.signedIn && (
           <p className="show-banner">
-            <LockIcon /> <a href="/ingresar">Ingresa</a> para ver dueños anteriores, SOAT,
+            <LockIcon /> <Link href="/ingresar">Ingresa</Link> para ver dueños anteriores, SOAT,
             gravámenes y más.
           </p>
         )}
