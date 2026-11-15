@@ -20,6 +20,14 @@ const PUBLIC_FIELDS = [
   'colorId',
   'transmission',
   'fuel',
+  'previousOwners',
+  'hasServiceHistory',
+  'soatValid',
+  'technicalReviewValid',
+  'hasSpareKey',
+  'hasLiens',
+  'hasAccidents',
+  'description',
   'plate',
 ] as const satisfies readonly (keyof ListingView)[];
 
@@ -60,6 +68,14 @@ export function toPendingListingResponse({
           transmission: vehicle.transmission,
           fuel: vehicle.fuel,
           plate: vehicle.plate,
+          previousOwners: vehicle.previousOwners,
+          hasServiceHistory: vehicle.hasServiceHistory,
+          soatValid: vehicle.soatValid,
+          technicalReviewValid: vehicle.technicalReviewValid,
+          hasSpareKey: vehicle.hasSpareKey,
+          hasLiens: vehicle.hasLiens,
+          hasAccidents: vehicle.hasAccidents,
+          description: vehicle.description,
         }
       : null,
   };

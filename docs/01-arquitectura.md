@@ -33,7 +33,7 @@ Cambiar Culqi por otra pasarela, o PostgreSQL por un buscador dedicado, signific
 
 ## Modelo de dominio (resumen)
 - `Listing` (genérico): id, vertical, owner, estado, precio, moneda, ubicación, fotos, fechas.
-- `VehicleDetails` (extensión): marca, modelo, año, versión, carrocería, color, kilometraje, transmisión, combustible, placa, estado de uso.
+- `VehicleDetails` (extensión): marca, modelo, año, versión, carrocería, color, kilometraje, transmisión, combustible, placa, estado de uso y, declarado por el vendedor (nulo = no informado), dueños anteriores, mantenimiento al día, SOAT, revisión técnica, llave de repuesto, gravámenes, choques y descripción. Se ven desde el nivel `registered`; la placa solo desde `deposit_paid`.
 - `PropertyDetails` (futuro): no se implementa ahora, pero el diseño lo admite sin migraciones destructivas.
 - Catálogo cerrado: `Brand`, `Model`, `Version`, `BodyType`, `Color`, `Feature`.
 - `User`, `SellerProfile`, `DealerProfile`, `IdentityVerification`.

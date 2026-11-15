@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
+import { parseTriState } from '../../lib/tri-state.ts';
 
 interface Option {
   id: number;
@@ -14,6 +15,19 @@ async function getJson<T>(url: string): Promise<T | null> {
   } catch {
     return null;
   }
+}
+
+function TriSelect({ name, label }: { name: string; label: string }) {
+  return (
+    <label>
+      {label}
+      <select name={name} defaultValue="">
+        <option value="">No sé</option>
+        <option value="yes">Sí</option>
+        <option value="no">No</option>
+      </select>
+    </label>
+  );
 }
 
 export function SellForm() {
@@ -46,6 +60,7 @@ export function SellForm() {
     const f = new FormData(event.currentTarget);
     const n = (k: string) => Number(f.get(k));
     const s = (k: string) => String(f.get(k) ?? '').trim();
+    const tri = (k: string) => parseTriState(f.get(k));
     setBusy(true);
     setMessage(null);
     try {
@@ -68,6 +83,14 @@ export function SellForm() {
             transmission: s('transmission'),
             fuel: s('fuel'),
             plate: s('plate'),
+            previousOwners: f.get('previousOwners') === '' ? null : n('previousOwners'),
+            hasServiceHistory: tri('hasServiceHistory'),
+            soatValid: tri('soatValid'),
+            technicalReviewValid: tri('technicalReviewValid'),
+            hasSpareKey: tri('hasSpareKey'),
+            hasLiens: tri('hasLiens'),
+            hasAccidents: tri('hasAccidents'),
+            description: s('description') || null,
           },
         }),
       });
@@ -206,6 +229,29 @@ export function SellForm() {
           className="mono"
         />
       </label>
+      <fieldset className="sell-history">
+        <legend>Historial del auto (lo verifica un asesor)</legend>
+        <div className="row">
+          <label>
+            Dueños anteriores
+            <input name="previousOwners" type="number" min={0} max={20} inputMode="numeric" />
+          </label>
+          <TriSelect name="hasServiceHistory" label="Mantenimiento al día" />
+        </div>
+        <div className="row">
+          <TriSelect name="soatValid" label="SOAT vigente" />
+          <TriSelect name="technicalReviewValid" label="Revisión técnica vigente" />
+        </div>
+        <div className="row">
+          <TriSelect name="hasLiens" label="Tiene gravámenes" />
+          <TriSelect name="hasAccidents" label="Choques declarados" />
+        </div>
+        <TriSelect name="hasSpareKey" label="Llave de repuesto" />
+        <label>
+          Descripción (opcional)
+          <textarea name="description" rows={4} maxLength={1000} />
+        </label>
+      </fieldset>
       <div className="row">
         <label>
           Precio

@@ -33,6 +33,14 @@ export function makeVehicle(overrides: Partial<VehicleDetails> = {}): VehicleDet
     transmission: 'automatic',
     fuel: 'gasoline',
     plate: 'KNT482',
+    previousOwners: 1,
+    hasServiceHistory: true,
+    soatValid: true,
+    technicalReviewValid: true,
+    hasSpareKey: true,
+    hasLiens: false,
+    hasAccidents: false,
+    description: 'Único dueño, mantenimiento en concesionaria.',
     ...overrides,
   };
 }

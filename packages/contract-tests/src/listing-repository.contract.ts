@@ -50,6 +50,19 @@ export function listingRepositoryContract(
       expect(await repo.findVehicleDetails(id)).toEqual(makeVehicle());
     });
 
+    it('round-trips the declared second-hand data, including unknown (null) values', async () => {
+      await repo.save(
+        makeListing(),
+        makeVehicle({ previousOwners: 3, hasLiens: true, soatValid: null, description: null }),
+      );
+      expect(await repo.findVehicleDetails(id)).toMatchObject({
+        previousOwners: 3,
+        hasLiens: true,
+        soatValid: null,
+        description: null,
+      });
+    });
+
     it('stores a vehicle without a version', async () => {
       await repo.save(makeListing(), makeVehicle({ versionId: null }));
       expect((await repo.findVehicleDetails(id))?.versionId).toBeNull();

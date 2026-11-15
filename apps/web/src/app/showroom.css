@@ -1,0 +1,267 @@
+/* ===== Sala de exhibición (ficha del auto) ===== */
+.show {
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: radial-gradient(120% 90% at 50% 20%, #ffffff 0%, var(--t-panel) 100%);
+  overflow: hidden;
+}
+.show-head {
+  display: grid;
+  gap: var(--space-3);
+}
+.show-title {
+  font-size: var(--font-size-2xl);
+  margin: 0;
+  max-width: none;
+}
+.show-place {
+  margin: 0;
+  color: var(--t-text-muted);
+}
+.show-head-right {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.show-price {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+.show-stage {
+  display: grid;
+  place-items: center;
+}
+.show-car {
+  position: relative;
+  width: 100%;
+  max-width: 44rem;
+  transition: transform 0.5s ease;
+}
+.show-car .car-art {
+  position: relative;
+  z-index: 1;
+}
+.show-platform {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 14%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #ffffff, rgb(255 255 255 / 0));
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.7);
+}
+.show-photo-note {
+  display: block;
+  position: relative;
+  z-index: 1;
+  margin-top: var(--space-2);
+  text-align: center;
+  color: var(--t-text-muted);
+}
+.show-info {
+  display: grid;
+  gap: var(--space-3);
+  transition:
+    opacity 0.35s ease,
+    visibility 0.35s ease;
+}
+.show-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.show-tile {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--t-surface) 78%, transparent);
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+}
+.show-tile small {
+  color: var(--t-text-muted);
+}
+.show-tile strong {
+  font-size: var(--font-size-lg);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.show-tile-ok strong,
+.tone-ok {
+  color: #1c6b3a;
+}
+.show-tile-warn strong,
+.tone-warn {
+  color: #a3280f;
+}
+.show-tile-locked strong {
+  color: var(--t-text-muted);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+.lock-icon {
+  flex: none;
+}
+.plate-chip {
+  display: inline-block;
+  justify-self: start;
+  padding: var(--space-1) var(--space-4);
+  background: #fff;
+  color: var(--t-text);
+  border: 2px solid var(--t-text);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-lg);
+}
+.show-side {
+  display: grid;
+  gap: var(--space-3);
+}
+.show-reserve {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+}
+.show-reserve .btn[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Modo detalle: las tarjetas se ocultan y el auto se acerca. No cambia el tamaño de nada. */
+.show-focus .show-info {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.show-focus .show-car {
+  transform: scale(1.08);
+}
+
+.show-detail {
+  margin-top: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+.show-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--t-bg);
+  border-radius: var(--radius-lg);
+}
+.show-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+.show-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--t-border);
+}
+.show-row dt {
+  color: var(--t-text-muted);
+}
+.show-row dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (min-width: 40rem) {
+  .show-head {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+  .show-bottom {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .show-info {
+    grid-template-columns: 1fr 1fr;
+  }
+  .show-bottom {
+    grid-column: 1 / -1;
+  }
+  .show-side {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 64rem) {
+  .show {
+    padding: var(--space-6);
+    grid-template-columns: minmax(11rem, 1fr) minmax(0, 2fr) minmax(11rem, 1fr);
+    grid-template-areas:
+      'head head head'
+      'left stage right'
+      'bottom bottom side';
+    align-items: center;
+  }
+  .show-head {
+    grid-area: head;
+  }
+  .show-stage {
+    grid-area: stage;
+  }
+  /* La información se reparte alrededor del auto: este contenedor desaparece de la rejilla. */
+  .show-info {
+    display: contents;
+  }
+  .show-group {
+    align-content: center;
+  }
+  .show-left {
+    grid-area: left;
+    grid-template-columns: 1fr;
+  }
+  .show-right {
+    grid-area: right;
+    grid-template-columns: 1fr;
+  }
+  .show-bottom {
+    grid-area: bottom;
+  }
+  .show-side {
+    grid-area: side;
+    grid-template-columns: 1fr;
+  }
+  .show-group,
+  .show-side {
+    transition:
+      opacity 0.35s ease,
+      visibility 0.35s ease;
+  }
+  .show-focus .show-group,
+  .show-focus .show-side {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .show-car,
+  .show-info,
+  .show-group,
+  .show-side {
+    transition: none;
+  }
+}

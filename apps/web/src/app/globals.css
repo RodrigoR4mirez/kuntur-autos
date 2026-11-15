@@ -1,4 +1,5 @@
 @import url('./home.css');
+@import url('./showroom.css');
 :root {
   --font-family-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
   --font-family-body: 'Figtree Variable', system-ui, sans-serif;
@@ -140,6 +141,27 @@ a {
   background: var(--t-surface);
   color: var(--t-text);
   font: inherit;
+}
+.form textarea {
+  padding: var(--space-3);
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-md);
+  background: var(--t-surface);
+  color: var(--t-text);
+  font: inherit;
+  resize: vertical;
+}
+.sell-history {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-lg);
+}
+.sell-history legend {
+  padding: 0 var(--space-2);
+  font-weight: 700;
 }
 .form .mono {
   font-family: var(--font-family-plate);

@@ -206,6 +206,14 @@ async function seedDemoListing(listings: ListingRepository): Promise<void> {
       transmission: 'automatic',
       fuel: 'gasoline',
       plate: 'KNT482',
+      previousOwners: 1,
+      hasServiceHistory: true,
+      soatValid: true,
+      technicalReviewValid: true,
+      hasSpareKey: true,
+      hasLiens: false,
+      hasAccidents: false,
+      description: 'Único dueño, mantenimiento en concesionaria.',
     },
   );
 }

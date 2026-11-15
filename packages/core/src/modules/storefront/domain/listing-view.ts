@@ -23,6 +23,14 @@ export interface ListingView {
   readonly colorId?: number;
   readonly transmission?: Transmission;
   readonly fuel?: Fuel;
+  readonly previousOwners?: number | null;
+  readonly hasServiceHistory?: boolean | null;
+  readonly soatValid?: boolean | null;
+  readonly technicalReviewValid?: boolean | null;
+  readonly hasSpareKey?: boolean | null;
+  readonly hasLiens?: boolean | null;
+  readonly hasAccidents?: boolean | null;
+  readonly description?: string | null;
   // Desde 'deposit_paid'
   readonly plate?: string;
 }
@@ -56,6 +64,14 @@ export function projectVehicleListing(
         colorId: vehicle.colorId,
         transmission: vehicle.transmission,
         fuel: vehicle.fuel,
+        previousOwners: vehicle.previousOwners,
+        hasServiceHistory: vehicle.hasServiceHistory,
+        soatValid: vehicle.soatValid,
+        technicalReviewValid: vehicle.technicalReviewValid,
+        hasSpareKey: vehicle.hasSpareKey,
+        hasLiens: vehicle.hasLiens,
+        hasAccidents: vehicle.hasAccidents,
+        description: vehicle.description,
       }
     : {};
 

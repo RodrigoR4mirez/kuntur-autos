@@ -49,7 +49,7 @@ Se calcula en el servidor para cada petición (`determineAccessLevel`):
 | Nivel | Cuándo | Campos extra |
 |---|---|---|
 | `anonymous` | Sin sesión | Título, precio, ubicación, marca, modelo, año, kilometraje |
-| `registered` | Con sesión | Versión, carrocería, color, transmisión, combustible |
+| `registered` | Con sesión | Versión, carrocería, color, transmisión, combustible, y lo declarado por el vendedor: dueños anteriores, mantenimiento, SOAT, revisión técnica, llave de repuesto, gravámenes, choques y descripción (`null` = no informado) |
 | `deposit_paid` | Cita de ese anuncio con depósito pagado (agendada o realizada) | Placa |
 | `closed` | Compra cerrada (llega con la Fase 2) | — |
 
@@ -67,15 +67,20 @@ Cuerpo (todo obligatorio; `versionId` puede ser `null`):
   "vehicle": {
     "brandId": 2, "modelId": 20, "versionId": null, "bodyTypeId": 2, "colorId": 3,
     "year": 2020, "mileageKm": 30000,
-    "transmission": "manual", "fuel": "gasoline", "plate": "abc-123"
+    "transmission": "manual", "fuel": "gasoline", "plate": "abc-123",
+    "previousOwners": 1, "hasServiceHistory": true, "soatValid": true,
+    "technicalReviewValid": true, "hasSpareKey": true, "hasLiens": false,
+    "hasAccidents": false, "description": "Único dueño, mantenimiento en concesionaria."
   }
 }
 ```
 
+Los campos de historial (`previousOwners` 0 a 20, los `has…`/`…Valid` booleanos y `description` hasta 1000 caracteres) son **opcionales**: ausente o `null` significa "no informado" (la migración `0002` agrega columnas nulas, compatible hacia atrás). Los declara el vendedor; el asesor los ve en `GET /review/listings` y los revisa antes de aprobar. **No se verifican con un historial por placa** (el proveedor aún no existe).
+
 - **Campos desconocidos se rechazan (400)**, por ejemplo `ownerId` o `status`: nadie elige su propio dueño ni publica sin revisión.
 - La placa se acepta con o sin guion y en cualquier caja; se guarda normalizada (`ABC123`).
 - El dinero va en céntimos, como entero.
-- Códigos 422: `invalid_title` (5 a 100 caracteres), `invalid_price` (mayor que cero), `invalid_year`, `invalid_mileage`, `invalid_plate`.
+- Códigos 422: `invalid_title` (5 a 100 caracteres), `invalid_price` (mayor que cero), `invalid_year`, `invalid_mileage`, `invalid_plate`, `invalid_owners`, `invalid_description`.
 
 ## Cómo agregar una ruta
 Sigue los pasos de `05-arquitectura-limpia.md`. En la API: esquema en `packages/contracts`, ruta delgada en `apps/api/src/interface/http`, pruebas con `app.inject` en `app.test.ts`, y **esta tabla actualizada en el mismo commit**.

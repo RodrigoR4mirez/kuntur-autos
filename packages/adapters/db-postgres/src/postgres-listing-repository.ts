@@ -42,6 +42,14 @@ function toVehicle(row: VehicleRow): VehicleDetails {
     transmission: row.transmission as VehicleDetails['transmission'],
     fuel: row.fuel as VehicleDetails['fuel'],
     plate: row.plate,
+    previousOwners: row.previousOwners,
+    hasServiceHistory: row.hasServiceHistory,
+    soatValid: row.soatValid,
+    technicalReviewValid: row.technicalReviewValid,
+    hasSpareKey: row.hasSpareKey,
+    hasLiens: row.hasLiens,
+    hasAccidents: row.hasAccidents,
+    description: row.description,
   };
 }
 
@@ -136,6 +144,14 @@ export class PostgresListingRepository implements ListingRepository {
           transmission: vehicle.transmission,
           fuel: vehicle.fuel,
           plate: vehicle.plate,
+          previousOwners: vehicle.previousOwners,
+          hasServiceHistory: vehicle.hasServiceHistory,
+          soatValid: vehicle.soatValid,
+          technicalReviewValid: vehicle.technicalReviewValid,
+          hasSpareKey: vehicle.hasSpareKey,
+          hasLiens: vehicle.hasLiens,
+          hasAccidents: vehicle.hasAccidents,
+          description: vehicle.description,
         };
         await tx
           .insert(vehicleDetails)

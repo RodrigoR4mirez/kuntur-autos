@@ -28,4 +28,20 @@ describe('validateVehicle', () => {
     expect(validateVehicle(makeVehicle({ plate: 'knt482' }), 2026).ok).toBe(false);
     expect(validateVehicle(makeVehicle({ plate: 'KNT-482' }), 2026).ok).toBe(false);
   });
+
+  it('accepts unknown declared data (null)', () => {
+    const v = makeVehicle({ previousOwners: null, description: null, hasLiens: null });
+    expect(validateVehicle(v, 2026).ok).toBe(true);
+  });
+
+  it('rejects an impossible number of previous owners', () => {
+    expect(validateVehicle(makeVehicle({ previousOwners: -1 }), 2026).ok).toBe(false);
+    expect(validateVehicle(makeVehicle({ previousOwners: 2.5 }), 2026).ok).toBe(false);
+    expect(validateVehicle(makeVehicle({ previousOwners: 21 }), 2026).ok).toBe(false);
+  });
+
+  it('rejects a description longer than 1000 characters', () => {
+    expect(validateVehicle(makeVehicle({ description: 'a'.repeat(1001) }), 2026).ok).toBe(false);
+    expect(validateVehicle(makeVehicle({ description: 'a'.repeat(1000) }), 2026).ok).toBe(true);
+  });
 });

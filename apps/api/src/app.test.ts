@@ -106,6 +106,9 @@ describe('GET /listings/:id', () => {
     expect(body).toMatchObject({ id: 'listing-1', access: 'anonymous', year: 2019 });
     expect(body).not.toHaveProperty('transmission');
     expect(body).not.toHaveProperty('plate');
+    expect(body).not.toHaveProperty('previousOwners');
+    expect(body).not.toHaveProperty('hasLiens');
+    expect(body).not.toHaveProperty('description');
   });
 
   it('adds the full spec for a signed-in user, still without the plate', async () => {
@@ -114,7 +117,13 @@ describe('GET /listings/:id', () => {
       url: '/listings/listing-1',
       headers: auth('token-buyer'),
     });
-    expect(res.json()).toMatchObject({ access: 'registered', transmission: 'automatic' });
+    expect(res.json()).toMatchObject({
+      access: 'registered',
+      transmission: 'automatic',
+      previousOwners: 1,
+      hasLiens: false,
+      soatValid: true,
+    });
     expect(res.json()).not.toHaveProperty('plate');
   });
 

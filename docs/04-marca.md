@@ -72,6 +72,14 @@ Referencia dada por el dueño: interfaz clara con paneles redondeados, **negro f
 - **Estructura:** logo y barra superior (pestañas, ubicación, cuenta), barra lateral de iconos (en móvil pasa a barra inferior), tablero de paneles. Puntos de quiebre: 40 rem y 64 rem.
 - **Ilustración del auto** (`car-art.tsx`): es **provisional**, dibujada para el proyecto; no es una foto de un anuncio. Se reemplaza al existir la subida de fotos. Hay que usar fotos propias o con licencia (no la imagen de referencia).
 
+## Ficha del auto: sala de exhibición (2026-11-15)
+Referencia del dueño: el auto al centro sobre una plataforma, tarjetas de cristal alrededor (kilometraje, año, motor, etc.) y un panel negro de reserva. `apps/web/src/components/showroom.tsx` + `showroom.css`; los datos se preparan en `lib/showroom.ts` (funciones puras con pruebas).
+- **Escritorio:** tarjetas a izquierda y derecha del auto, historial (SOAT, revisión, mantenimiento, gravámenes, choques, llave) abajo, placa y reserva a la derecha. **Tablet y móvil:** el auto arriba y las tarjetas en cuadrícula.
+- **Botón "Ver auto en detalle":** oculta las tarjetas (`visibility`, sin cambiar el tamaño de nada, para no generar salto de diseño) y acerca el auto. `aria-pressed` indica el estado.
+- **Privacidad:** el servidor decide qué campos envía. Lo que el visitante no puede ver sale como "Ingresa para ver" con candado; la placa sale enmascarada hasta reservar la visita.
+- **Honestidad:** SOAT, gravámenes, choques y dueños los declara el vendedor y los revisa un asesor; la ficha lo dice. El botón "Reservar visita" está **deshabilitado** hasta que exista el depósito.
+- La ilustración del auto sigue siendo provisional (no hay fotos aún).
+
 ## Aplicación en la web (rediseño 2026-11-15, primera versión)
 La landing (`apps/web/src/app/page.tsx`, estilos en `home.css`) aplica la marca así: fondo Noche Andina (claro u oscuro según el sistema), **Rocoto solo para el botón principal** ("Vender mi auto"), **Oro Inca solo para el sello** y la palabra clave del título, Cielo Kuntur en los números de los pasos y el degradado de la banda final. La **placa** es el centro de la ficha de ejemplo (JetBrains Mono, fondo blanco, borde Noche). Títulos en Bricolage Grotesque y texto en Figtree. La ficha del hero está rotulada "Ejemplo de ficha": no es un anuncio real. `apps/web/src/design.test.ts` verifica el contraste AA (claro y oscuro) de los pares de color usados y reglas básicas del CSS.
 
