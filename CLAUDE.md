@@ -2,7 +2,7 @@
 
 Marketplace de autos de segunda mano (y nuevos) para todo el Perú. Web primero (PWA), luego iOS/Android con Expo/React Native. El diseño debe soportar después otras verticales (alquiler y venta de departamentos) sin reescribir el núcleo.
 
-Lee primero: `docs/00-decisiones.md` (decisiones tomadas), `docs/01-arquitectura.md` (producto), `docs/05-arquitectura-limpia.md` (capas, módulos y cómo agregar una funcionalidad) `docs/06-ci-cd.md` (integración y despliegue), `docs/08-api.md` (rutas y errores de la API), `docs/09-autenticacion.md` (inicio de sesión y variables de entorno) y `docs/10-runbook.md` (procedimiento oficial de entrega).
+Lee primero: `docs/00-decisiones.md` (decisiones tomadas), `docs/01-arquitectura.md` (producto), `docs/05-arquitectura-limpia.md` (capas, módulos y cómo agregar una funcionalidad) `docs/06-ci-cd.md` (integración y despliegue), `docs/08-api.md` (rutas y errores de la API), `docs/09-autenticacion.md` (inicio de sesión y variables de entorno) `docs/10-runbook.md` (procedimiento oficial de entrega) y **`docs/12-estado-y-siguientes-pasos.md` (estado actual y qué sigue; léelo al empezar cualquier sesión)** y `docs/13-bitacora.md` (historia de lo hecho y problemas ya resueltos).
 
 ## Reglas innegociables
 1. **Independencia tecnológica.** Ninguna librería, framework, base de datos o proveedor externo se importa desde `packages/core`. El núcleo solo define *puertos* (interfaces); los proveedores viven en `packages/adapters/*`.
