@@ -18,7 +18,7 @@ Marketplace de autos de segunda mano para todo el Perú. Web (PWA) primero; lueg
 - [`docs/prompts/00-master-prompt.md`](docs/prompts/00-master-prompt.md): prompt para iniciar cada sesión.
 
 ## Estado
-Estado: staging en vivo en Azure, con base de datos, CI/CD y despliegue automático. Producción preparada, pendiente de su primera puesta en marcha (ver `docs/10-runbook.md`). Falta de la Fase 1: SMS y DNI, fotos, búsqueda con filtros, moderación y la web con Next.js.
+Estado: staging en vivo en Azure, con base de datos, CI/CD, despliegue automático e inicio de sesión con Google verificado. Producción preparada, pendiente de su primera puesta en marcha (ver `docs/10-runbook.md`). Falta de la Fase 1: SMS y DNI, fotos, búsqueda con filtros, moderación y la web con Next.js.
 
 
 ## Cómo trabajar

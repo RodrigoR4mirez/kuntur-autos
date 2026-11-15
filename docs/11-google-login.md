@@ -8,7 +8,7 @@ Con credenciales de prueba, la API genera una URL de inicio de sesión de Google
 - `scope`: `email profile openid`;
 - `redirect_uri`: `https://kuntur-api-staging.politerock-80f1ef72.brazilsouth.azurecontainerapps.io/auth/callback/google`.
 
-**No verificado:** el inicio real con una cuenta de Google. Eso se prueba en el paso 4.
+**Verificado en staging (2026-11-15):** el inicio real con una cuenta de Google desde la página `/login-test` (ver el final de este documento).
 
 ## 1. Google Cloud (gratis)
 1. Entra a https://console.cloud.google.com y selecciona (o crea) el proyecto `kuntur-autos`.
@@ -77,3 +77,11 @@ La prueba con `curl` no basta: el inicio debe empezar en el navegador para que l
 **Usarla:** pulsa **Entrar con Google**, elige tu cuenta de prueba y acepta. Debe aparecer tu sesión en JSON.
 
 **Retirarla** cuando exista la web: pon `LOGIN_TEST_PAGE` en `false` y vuelve a ejecutar Infraestructura Azure, o bórrala del entorno.
+
+## Resultado de la prueba real en staging (2026-11-15)
+- El botón de `/login-test` llevó a la pantalla de Google, la cuenta de prueba aceptó y Google volvió a `/auth/callback/google`.
+- `/auth/get-session` devolvió una sesión que caduca a los 7 días, con el usuario creado automáticamente: `role: buyer`, `emailVerified: true`, nombre y correo de la cuenta de Google.
+- Esto confirma: `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` son los del cliente "Kuntur Autos staging", la dirección de redirección está bien registrada y las tablas de usuario y sesión funcionan en Neon.
+- Lecciones: (1) el inicio **debe empezar en el navegador**; un enlace generado con `curl` no puede completar el proceso, por falta de la cookie de estado. (2) Si el despliegue no incluye las rutas `/auth/*`, la API responde `not_found`: revisa que la imagen en Azure sea la última.
+
+**Aún sin verificar:** el cierre de sesión, la recuperación de contraseña y el uso de la sesión desde otra aplicación (ver `09-autenticacion.md`, Pendiente).

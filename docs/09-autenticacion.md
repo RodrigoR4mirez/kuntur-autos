@@ -197,14 +197,17 @@ La respuesta trae una `url`. Al aceptar en Google vuelves a `/auth/callback/goog
 
 Verificado con pruebas automáticas (PostgreSQL real en memoria y Better Auth real): registro; que no se pueda iniciar sesión sin verificar el correo; verificación con el enlace recibido; inicio de sesión y token Bearer; publicar con ese token; contraseña incorrecta y tokens inventados (401); rol no elegible; contraseñas cortas rechazadas; registro por correo desactivado sin proveedor de correo; configuración (`loadConfig`) y que los tokens de desarrollo no funcionan en producción.
 
+**Verificado en staging con una cuenta real (2026-11-15):** el inicio con Google de punta a punta. Desde la página temporal `/login-test` se eligió una cuenta de prueba, Google aceptó, la API recibió la vuelta y `/auth/get-session` devolvió una sesión de 7 días con un usuario nuevo (`role: buyer`, `emailVerified: true`). Detalle en `11-google-login.md`.
+
 **No verificado:**
-- **El flujo con Google**: necesita credenciales reales y un navegador.
+- **El token Bearer tras entrar con Google**: la sesión del navegador va por cookie; la API (`SessionResolver`) solo lee `Authorization: Bearer`. Falta decidir cómo la web enviará la sesión a la API (ver Pendiente).
 - **El envío real de correos por SMTP**: las pruebas usan un transporte simulado.
 - Recuperación de contraseña, cierre de sesión, cookies en un navegador, límites de intentos de la librería.
 - La migración `0001` y la sesión en Neon y Azure (solo se probó con PGlite).
 - CORS: se configurará cuando exista la web (`AUTH_TRUSTED_ORIGINS`).
 
 ## Pendiente
+- **Sesión de la web hacia la API:** la web (Next.js) debe reenviar la sesión como `Authorization: Bearer` o la API debe leer también la cookie. Decidirlo al construir la web.
 - SMS y validación de DNI (elegir proveedor y crear cuenta).
 - CORS y el uso de cookies desde la web de Next.js.
 - Dominio propio, para el remitente de correo y las URL públicas.

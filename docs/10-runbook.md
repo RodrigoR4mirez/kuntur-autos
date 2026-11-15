@@ -105,7 +105,7 @@ Esto no está probado todavía en una cuenta real: confírmalo la primera vez co
 - No cambies el nombre de las variables `AZURE_*` ni el de `staging` sin actualizar la credencial de Azure y este runbook.
 
 ## 9. Verificado y no verificado
-- **Verificado en GitHub (por el propietario):** CI, seguridad, despliegue a staging, flujo de infraestructura en el segundo intento, y `/health` respondiendo en Azure.
+- **Verificado en GitHub (por el propietario):** CI, seguridad, despliegue a staging, flujo de infraestructura en el segundo intento, y `/health` respondiendo en Azure; el inicio de sesión con Google de punta a punta en staging (2026-11-15).
 - **Verificado localmente:** la coherencia de Dockerfile, documentación, Bicep y versión (`pnpm delivery`), con pruebas que la hacen fallar a propósito.
 - **No verificado:** la reversión manual de la sección 7; el cambio de base de datos completo; la alerta de presupuesto de Azure; el flujo con Google y el envío real de correos.
 
