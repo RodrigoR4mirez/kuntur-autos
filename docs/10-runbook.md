@@ -109,6 +109,21 @@ Esto no está probado todavía en una cuenta real: confírmalo la primera vez co
 - **Verificado localmente:** la coherencia de Dockerfile, documentación, Bicep y versión (`pnpm delivery`), con pruebas que la hacen fallar a propósito.
 - **No verificado:** la reversión manual de la sección 7; el cambio de base de datos completo; la alerta de presupuesto de Azure; el flujo con Google y el envío real de correos.
 
+## 9b. La web (`apps/web`) en staging
+
+La web es otra Container App (`kuntur-web-<entorno>`) con su propia imagen `ghcr.io/rodrigor4mirez/kuntur-autos-web`. El navegador habla **solo con la web**: ella reenvía `/api/*` y `/auth/*` a la API (variable `KUNTUR_API_URL`, la pone Bicep). Así no hay CORS y la cookie de sesión queda en el dominio de la web; la API acepta esa cookie igual que un token Bearer.
+
+**Primera vez (una sola vez, en este orden):**
+1. Fusiona el pull request. **Despliegue a staging** publica las dos imágenes. El paso de la web avisa "la app de la web no existe todavía" y termina en verde: es lo esperado.
+2. GitHub → tu perfil → **Packages** → `kuntur-autos-web` → **Package settings** → **Change visibility → Public** (si no, Azure no puede descargarla).
+3. **Actions → Infraestructura Azure → Run workflow** (`environment = staging`, `image` vacío). Crea la web y cambia la dirección de inicio de sesión a la de la web. Mira en el resumen la salida `webUrl` y `googleRedirectUri`.
+4. En Google Cloud (**Clientes → tu cliente web**) agrega el URI `googleRedirectUri` (`https://<web>/auth/callback/google`). **Sin este paso el ingreso con Google falla con `redirect_uri_mismatch`.**
+5. Ejecuta **Despliegue a staging** otra vez (o haz otro merge): ahora despliega la web por digest y la prueba de humo verifica página, catálogo a través de la web y 401 al publicar sin sesión.
+
+**Cada cambio posterior:** merge a `main` → se despliegan API y web, con reversión automática de cada una si su prueba de humo falla.
+
+**Verificado localmente:** la imagen de la web se construye y arranca con los mismos pasos del Dockerfile (simulados, sin Docker); el reenvío, el catálogo a través de la web y el 401 sin sesión; la API acepta la cookie de sesión (prueba con Better Auth y Postgreси en memoria). **No verificado:** el `docker build` real, el escaneo Trivy de la imagen web, la plantilla Bicep con `webImage` (la valida CI), el ingreso con Google a través de la web en Azure.
+
 ## 10. Producción: primera puesta en marcha y uso normal
 
 Detalle en `06-ci-cd.md`, sección "Producción". Resumen operativo:

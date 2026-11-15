@@ -37,6 +37,7 @@ jobs:
       ENVIRONMENT_NAME: ${{ inputs.environment }}
       RESOURCE_GROUP: rg-kuntur-${{ inputs.environment }}
       APP_NAME: kuntur-api-${{ inputs.environment }}
+      WEB_APP_NAME: kuntur-web-${{ inputs.environment }}
       MIN_REPLICAS: ${{ inputs.environment == 'production' && '1' || '0' }}
       LOGIN_TEST_PAGE: ${{ vars.LOGIN_TEST_PAGE }}
       INPUT_IMAGE: ${{ inputs.image }}
@@ -69,13 +70,20 @@ jobs:
           fi
           echo "image=$image" >> "$GITHUB_OUTPUT"
           echo "Imagen que se usará: $image" >> "$GITHUB_STEP_SUMMARY"
+          # La web sigue la misma regla: la que ya corre; la primera vez, la última de staging.
+          web_image=$(az containerapp show -n "$WEB_APP_NAME" -g "$RESOURCE_GROUP" \
+            --query 'properties.template.containers[0].image' -o tsv 2>/dev/null || true)
+          [ -n "$web_image" ] || web_image="ghcr.io/rodrigor4mirez/kuntur-autos-web:staging"
+          echo "web_image=$web_image" >> "$GITHUB_OUTPUT"
+          echo "Imagen de la web: $web_image" >> "$GITHUB_STEP_SUMMARY"
       - name: Vista previa de cambios (what-if)
         env:
           IMAGE: ${{ steps.image.outputs.image }}
+          WEB_IMAGE: ${{ steps.image.outputs.web_image }}
         run: |
           az deployment group what-if -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
-            --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
+            --parameters image="$IMAGE" webImage="$WEB_IMAGE" webAppName="$WEB_APP_NAME" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
             environmentName="$ENVIRONMENT_NAME" minReplicas="$MIN_REPLICAS" loginTestPage="${LOGIN_TEST_PAGE:-false}" \
             authSecret="$AUTH_SECRET" googleClientId="$GOOGLE_CLIENT_ID" \
             googleClientSecret="$GOOGLE_CLIENT_SECRET" smtpUrl="$SMTP_URL" mailFrom="$MAIL_FROM" \
@@ -83,10 +91,11 @@ jobs:
       - name: Aplicar
         env:
           IMAGE: ${{ steps.image.outputs.image }}
+          WEB_IMAGE: ${{ steps.image.outputs.web_image }}
         run: |
           az deployment group create -g "$RESOURCE_GROUP" \
             --template-file infra/azure/main.bicep \
-            --parameters image="$IMAGE" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
+            --parameters image="$IMAGE" webImage="$WEB_IMAGE" webAppName="$WEB_APP_NAME" databaseUrl="$DATABASE_URL" appName="$APP_NAME" \
             environmentName="$ENVIRONMENT_NAME" minReplicas="$MIN_REPLICAS" loginTestPage="${LOGIN_TEST_PAGE:-false}" \
             authSecret="$AUTH_SECRET" googleClientId="$GOOGLE_CLIENT_ID" \
             googleClientSecret="$GOOGLE_CLIENT_SECRET" smtpUrl="$SMTP_URL" mailFrom="$MAIL_FROM" \

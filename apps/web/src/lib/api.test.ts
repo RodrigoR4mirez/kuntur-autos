@@ -3,8 +3,8 @@ import { fetchBrands, parseBrands } from './api.ts';
 
 describe('parseBrands', () => {
   it('conserva solo marcas con id y nombre', () => {
-    expect(parseBrands({ brands: [{ id: 'a', name: 'Toyota' }, { id: 1 }, null] })).toEqual([
-      { id: 'a', name: 'Toyota' },
+    expect(parseBrands({ brands: [{ id: 7, name: 'Toyota' }, { id: 'x' }, null] })).toEqual([
+      { id: 7, name: 'Toyota' },
     ]);
   });
   it('devuelve vacío ante formas inesperadas', () => {
@@ -23,8 +23,8 @@ describe('fetchBrands', () => {
   });
   it('devuelve las marcas cuando la API responde', async () => {
     const fetcher = (async () =>
-      Response.json({ brands: [{ id: 'b1', name: 'Kia' }] })) as unknown as typeof fetch;
-    expect(await fetchBrands('http://api.test', fetcher)).toEqual([{ id: 'b1', name: 'Kia' }]);
+      Response.json({ brands: [{ id: 2, name: 'Kia' }] })) as unknown as typeof fetch;
+    expect(await fetchBrands('http://api.test', fetcher)).toEqual([{ id: 2, name: 'Kia' }]);
   });
   it('si la API falla o responde error, devuelve vacío', async () => {
     const down = (async () => {

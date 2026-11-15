@@ -63,6 +63,14 @@ node scripts/pin-action.mjs actions/checkout
 ```
 Antes de usar una versión nueva, lee sus entradas (`action.yml` en ese SHA). Dependabot propone las actualizaciones cada semana.
 
+## La web en la entrega continua
+
+- `ci.yml` construye y escanea también la imagen de la web (`apps/web/Dockerfile`).
+- `deploy-staging.yml` publica dos imágenes (API y web, por digest) y el job `deploy` usa dos acciones: `deploy-app` (migra y despliega la API) y `deploy-web` (despliega la web, prueba de humo a través de la web y reversión propia). Si la app de la web aún no existe, `deploy-web` avisa y termina en verde.
+- `deploy-production.yml` resuelve también el digest de la web aprobado en staging (`kuntur-autos-web:sha-<commit>`).
+- `infra-azure.yml` crea y actualiza la web con la misma regla de la API (mantiene la imagen que ya corre; la primera vez usa `:staging`). `pnpm delivery` exige el Dockerfile de la web y el uso de `deploy-web` en ambos despliegues.
+- La imagen `kuntur-autos-web` debe ser **pública** en GHCR (ver `10-runbook.md`, 9b).
+
 ## Despliegue y reversión
 
 1. **Migraciones primero.** `pnpm db:seed` aplica las migraciones pendientes y carga el catálogo (es idempotente). Por eso toda migración debe ser **compatible hacia atrás**: la versión anterior de la API sigue corriendo mientras se migra. Para renombrar o borrar una columna se hace en dos despliegues (primero agregar y migrar el código, luego retirar).

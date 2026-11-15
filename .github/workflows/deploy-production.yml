@@ -28,6 +28,7 @@ jobs:
       contents: read
     outputs:
       image: ${{ steps.resolve.outputs.image }}
+      web_image: ${{ steps.resolve.outputs.web_image }}
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
@@ -58,6 +59,9 @@ jobs:
           digest=$(docker buildx imagetools inspect "ghcr.io/${owner}/kuntur-autos-api:sha-${COMMIT}" \
             --format '{{.Manifest.Digest}}')
           echo "image=ghcr.io/${owner}/kuntur-autos-api@${digest}" >> "$GITHUB_OUTPUT"
+          web_digest=$(docker buildx imagetools inspect "ghcr.io/${owner}/kuntur-autos-web:sha-${COMMIT}" \
+            --format '{{.Manifest.Digest}}')
+          echo "web_image=ghcr.io/${owner}/kuntur-autos-web@${web_digest}" >> "$GITHUB_OUTPUT"
           echo "Imagen aprobada en staging: ghcr.io/${owner}/kuntur-autos-api@${digest}" >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
@@ -86,3 +90,8 @@ jobs:
           resource_group: rg-kuntur-production
           app_name: kuntur-api-production
           database_url: ${{ secrets.DATABASE_URL }}
+      - uses: ./.github/actions/deploy-web
+        with:
+          image: ${{ needs.gate.outputs.web_image }}
+          resource_group: rg-kuntur-production
+          app_name: kuntur-web-production

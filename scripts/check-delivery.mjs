@@ -79,6 +79,17 @@ export function checkDelivery(root) {
       add(`apps/api/Dockerfile no copia ${dir}/package.json (la imagen no arrancará)`);
   }
 
+  // 1b. Dockerfile de la web: copia los paquetes del workspace que necesita apps/web
+  const webDockerfile = read('apps/web/Dockerfile');
+  const webNeeded = reachableWorkspaceDirs(root, 'apps/web', readJson).filter(
+    (d) => d !== 'apps/web',
+  );
+  const webCopied = dockerCopiedPackages(webDockerfile);
+  for (const dir of webNeeded) {
+    if (!webCopied.has(dir))
+      add(`apps/web/Dockerfile no copia ${dir}/package.json (la imagen no se construirá)`);
+  }
+
   // 2. Documentación de variables y secretos
   const docs = read('docs/06-ci-cd.md');
   const workflowDir = join(root, '.github', 'workflows');
@@ -129,9 +140,18 @@ export function checkDelivery(root) {
       add(`${file}: grupo o app inesperados para ${want.env}`);
     if (w.database_url !== '${{ secrets.DATABASE_URL }}')
       add(`${file}: database_url debe venir de secrets.DATABASE_URL del entorno`);
+    const webStep = (job?.steps ?? []).find((st) => st.uses === './.github/actions/deploy-web');
+    if (!webStep) add(`${file}: el job deploy debe usar la acción ./.github/actions/deploy-web`);
+    else if (
+      webStep.with?.resource_group !== want.rg ||
+      webStep.with?.app_name !== want.app.replace('-api-', '-web-')
+    )
+      add(`${file}: grupo o app de la web inesperados para ${want.env}`);
   }
-  if (!existsSync(join(root, '.github', 'actions', 'deploy-app', 'action.yml'))) {
-    add('falta la acción .github/actions/deploy-app/action.yml');
+  for (const action of ['deploy-app', 'deploy-web']) {
+    if (!existsSync(join(root, '.github', 'actions', action, 'action.yml'))) {
+      add(`falta la acción .github/actions/${action}/action.yml`);
+    }
   }
   const infraDoc = parse(read('.github/workflows/infra-azure.yml'));
   const infraEnv = infraDoc.on?.workflow_dispatch?.inputs?.environment;
