@@ -90,3 +90,6 @@ Los tokens cumplen contraste AA. Los botones usan texto en negrita y tamaño mí
 - `brand/logo/kuntur-mark.svg`: logotipo.
 - `packages/design-tokens/tokens.json`: fuente de verdad.
 - `packages/design-tokens/tokens.css`: generado con `node build.mjs`.
+
+### Ficha del auto: tarjetas flotando sobre la foto (2026-11-15)
+La foto (o la ilustración) ocupa todo el ancho de la ficha y las tarjetas de datos flotan **delante** de ella. El botón "Ver solo el auto" las oculta (`visibility: hidden`, sin `display: none`) y deja la foto limpia y ligeramente ampliada; "Mostrar información" las devuelve. En escritorio: columnas a izquierda y derecha y una fila inferior; en móvil y tableta: tiras con desplazamiento horizontal. Sin verificar: móvil real y otros navegadores.

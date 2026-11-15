@@ -21,90 +21,102 @@
   margin: 0;
   color: var(--t-text-muted);
 }
-.show-head-right {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
 .show-price {
   margin: 0;
   font-size: var(--font-size-xl);
 }
 .show-stage {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 30%, #ffffff 0%, var(--t-panel) 100%);
+  box-shadow: 0 18px 40px rgb(7 11 17 / 0.22);
+}
+.show-media {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
+  transition: transform 0.6s ease;
 }
-.show-car {
-  position: relative;
-  width: 100%;
-  max-width: 44rem;
-  transition: transform 0.5s ease;
-}
-.show-car .car-art {
+.show-media .car-art {
   position: relative;
   z-index: 1;
+  width: 92%;
 }
 .show-photo {
-  position: relative;
-  z-index: 1;
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 1400 / 934;
+  height: 100%;
   object-fit: cover;
-  border-radius: var(--radius-xl);
-  box-shadow: 0 18px 40px rgb(7 11 17 / 0.25);
 }
 .show-platform {
   position: absolute;
   left: 4%;
   right: 4%;
-  bottom: 14%;
-  height: 22%;
+  bottom: 30%;
+  height: 18%;
   border-radius: 50%;
   background: radial-gradient(closest-side, #ffffff, rgb(255 255 255 / 0));
   box-shadow: 0 0 0 2px rgb(255 255 255 / 0.7);
 }
 .show-photo-note {
   display: block;
-  position: relative;
-  z-index: 1;
-  margin-top: var(--space-2);
   text-align: center;
   color: var(--t-text-muted);
 }
+
+/* La información flota sobre la foto. */
 .show-info {
-  display: grid;
-  gap: var(--space-3);
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 3.25rem var(--space-3) var(--space-3);
+  pointer-events: none;
   transition:
     opacity 0.35s ease,
     visibility 0.35s ease;
 }
 .show-group {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
+  display: flex;
+  gap: var(--space-2);
   list-style: none;
   margin: 0;
   padding: 0;
+  overflow-x: auto;
+  pointer-events: auto;
+  scrollbar-width: none;
+}
+.show-left,
+.show-right {
+  flex: none;
 }
 .show-tile {
   display: grid;
   align-content: start;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  background: color-mix(in srgb, var(--t-surface) 78%, transparent);
-  backdrop-filter: blur(6px);
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  background: color-mix(in srgb, var(--t-surface) 86%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgb(7 11 17 / 0.18);
   border-radius: var(--radius-lg);
   min-width: 0;
+}
+.show-group .show-tile {
+  flex: none;
 }
 .show-tile small {
   color: var(--t-text-muted);
 }
 .show-tile strong {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -120,7 +132,6 @@
 }
 .show-tile-locked strong {
   color: var(--t-text-muted);
-  font-size: var(--font-size-md);
   font-weight: 500;
 }
 .lock-icon {
@@ -136,9 +147,29 @@
   border-radius: var(--radius-sm);
   font-size: var(--font-size-lg);
 }
+.show-toggle {
+  position: absolute;
+  z-index: 3;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: 999px;
+  background: var(--t-text);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgb(7 11 17 / 0.3);
+}
 .show-side {
   display: grid;
   gap: var(--space-3);
+}
+.show-side .show-tile {
+  background: var(--t-surface);
 }
 .show-reserve {
   display: grid;
@@ -151,14 +182,14 @@
   cursor: not-allowed;
 }
 
-/* Modo detalle: las tarjetas se ocultan y el auto se acerca. No cambia el tamaño de nada. */
+/* Modo "solo el auto": las tarjetas se ocultan y la foto se acerca. */
 .show-focus .show-info {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
-.show-focus .show-car {
-  transform: scale(1.08);
+.show-focus .show-media {
+  transform: scale(1.06);
 }
 
 .show-detail {
@@ -201,17 +232,10 @@
     grid-template-columns: 1fr auto;
     align-items: end;
   }
-  .show-bottom {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .show-info {
-    grid-template-columns: 1fr 1fr;
-  }
-  .show-bottom {
-    grid-column: 1 / -1;
+  .show-stage {
+    aspect-ratio: 4 / 3;
   }
   .show-side {
-    grid-column: 1 / -1;
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -219,60 +243,51 @@
 @media (min-width: 64rem) {
   .show {
     padding: var(--space-6);
-    grid-template-columns: minmax(11rem, 1fr) minmax(0, 2fr) minmax(11rem, 1fr);
-    grid-template-areas:
-      'head head head'
-      'left stage right'
-      'bottom bottom side';
-    align-items: center;
-  }
-  .show-head {
-    grid-area: head;
   }
   .show-stage {
-    grid-area: stage;
+    aspect-ratio: 21 / 10;
   }
-  /* La información se reparte alrededor del auto: este contenedor desaparece de la rejilla. */
+  .show-focus .show-stage {
+    aspect-ratio: 16 / 9;
+  }
   .show-info {
-    display: contents;
+    display: grid;
+    grid-template-columns: 13rem 1fr 13rem;
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+      'left . right'
+      'bottom bottom bottom';
+    padding: var(--space-5);
+    gap: var(--space-4);
   }
   .show-group {
-    align-content: center;
+    overflow: visible;
+  }
+  .show-left,
+  .show-right {
+    flex-direction: column;
+    align-self: center;
   }
   .show-left {
     grid-area: left;
-    grid-template-columns: 1fr;
   }
   .show-right {
     grid-area: right;
-    grid-template-columns: 1fr;
   }
   .show-bottom {
     grid-area: bottom;
   }
-  .show-side {
-    grid-area: side;
-    grid-template-columns: 1fr;
+  .show-bottom .show-tile {
+    flex: 1;
   }
-  .show-group,
-  .show-side {
-    transition:
-      opacity 0.35s ease,
-      visibility 0.35s ease;
-  }
-  .show-focus .show-group,
-  .show-focus .show-side {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+  .show-tile strong {
+    font-size: var(--font-size-lg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .show-car,
-  .show-info,
-  .show-group,
-  .show-side {
+  .show-media,
+  .show-info {
     transition: none;
   }
 }
