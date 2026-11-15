@@ -38,3 +38,18 @@ export const createListingSchema = z.strictObject({
   city: z.string().min(1).max(60),
   vehicle: vehicleInputSchema,
 });
+
+/**
+ * Query de GET /listings (listado público). Llega como texto por la URL: se convierte a número.
+ * Un parámetro ausente significa "sin filtro". Máximo 50 por página.
+ */
+export const searchListingsQuerySchema = z.object({
+  brandId: z.coerce.number().int().positive().optional(),
+  maxPriceMinor: z.coerce.number().int().positive().optional(),
+  minYear: z.coerce.number().int().min(1950).max(2100).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(24),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+/** Cuerpo de POST /listings/:id/review. `strictObject`: solo la decisión. */
+export const reviewListingSchema = z.strictObject({ decision: z.enum(['approve', 'reject']) });

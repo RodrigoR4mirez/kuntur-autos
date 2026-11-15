@@ -1,4 +1,4 @@
-import type { ListingView } from '@kuntur/core';
+import type { Listing, ListingView, PendingListing } from '@kuntur/core';
 
 /**
  * Lista blanca de campos de la respuesta pública. Si el dominio agrega un campo a
@@ -29,4 +29,38 @@ export function toListingResponse(view: ListingView): Record<string, unknown> {
     if (field in view) response[field] = view[field];
   }
   return response;
+}
+
+/** Fila de "mis anuncios" y de la cola de revisión. Nunca incluye el dueño ni la placa. */
+export function toOwnerListingResponse(listing: Listing): Record<string, unknown> {
+  return {
+    id: listing.id,
+    title: listing.title,
+    status: listing.status,
+    price: listing.price,
+    department: listing.department,
+    city: listing.city,
+    createdAt: listing.createdAt.toISOString(),
+  };
+}
+
+/** Fila de la cola de revisión: los datos del anuncio y del vehículo, incluida la placa, solo para asesores. */
+export function toPendingListingResponse({
+  listing,
+  vehicle,
+}: PendingListing): Record<string, unknown> {
+  return {
+    ...toOwnerListingResponse(listing),
+    vehicle: vehicle
+      ? {
+          brandId: vehicle.brandId,
+          modelId: vehicle.modelId,
+          year: vehicle.year,
+          mileageKm: vehicle.mileageKm,
+          transmission: vehicle.transmission,
+          fuel: vehicle.fuel,
+          plate: vehicle.plate,
+        }
+      : null,
+  };
 }

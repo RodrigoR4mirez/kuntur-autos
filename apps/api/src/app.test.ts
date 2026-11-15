@@ -4,6 +4,10 @@ import {
   determineAccessLevel,
   getCatalogOptions,
   getListingView,
+  listMyListings,
+  listPendingListings,
+  reviewListing,
+  searchListings,
   listBrands,
   listModelsOfBrand,
   submitListingForReview,
@@ -62,6 +66,7 @@ beforeEach(async () => {
     'token-owner': { userId: OWNER, role: 'seller' },
     'token-buyer': { userId: BUYER, role: 'buyer' },
     'token-stranger': { userId: STRANGER, role: 'buyer' },
+    'token-advisor': { userId: 'user-advisor' as UserId, role: 'advisor' },
   });
 
   app = buildApp({
@@ -74,6 +79,10 @@ beforeEach(async () => {
     }),
     submitListingForReview: submitListingForReview({ listings }),
     getListingView: getListingView({ listings }),
+    searchListings: searchListings({ listings }),
+    listMyListings: listMyListings({ listings }),
+    reviewListing: reviewListing({ listings }),
+    listPendingListings: listPendingListings({ listings }),
     listBrands: listBrands({ catalog }),
     listModelsOfBrand: listModelsOfBrand({ catalog }),
     getCatalogOptions: getCatalogOptions({ catalog }),
@@ -353,6 +362,10 @@ describe('login test page (temporal, solo con la opción activa)', () => {
       }),
       submitListingForReview: submitListingForReview({ listings }),
       getListingView: getListingView({ listings }),
+      searchListings: searchListings({ listings }),
+      listMyListings: listMyListings({ listings }),
+      reviewListing: reviewListing({ listings }),
+      listPendingListings: listPendingListings({ listings }),
       listBrands: listBrands({ catalog }),
       listModelsOfBrand: listModelsOfBrand({ catalog }),
       getCatalogOptions: getCatalogOptions({ catalog }),
@@ -363,5 +376,150 @@ describe('login test page (temporal, solo con la opción activa)', () => {
     expect(res.headers['content-type']).toMatch(/text\/html/);
     expect(res.body).toContain('/auth/sign-in/social');
     expect(res.body).not.toMatch(/secret/i);
+  });
+});
+
+describe('GET /listings (listado público)', () => {
+  it('returns only published listings, without owner or plate', async () => {
+    await listings.save(
+      makeListing({ id: 'draft-x' as ListingId, status: 'draft' }),
+      makeVehicle({ listingId: 'draft-x' as ListingId }),
+    );
+    const res = await app.inject({ method: 'GET', url: '/listings' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.items.map((i: { id: string }) => i.id)).toEqual(['listing-1']);
+    expect(body.items[0]).not.toHaveProperty('ownerId');
+    expect(body.items[0]).not.toHaveProperty('plate');
+    expect(body.items[0]).not.toHaveProperty('transmission');
+  });
+
+  it('shows registered-only fields to a signed-in person, still without the plate', async () => {
+    const res = await app.inject({ method: 'GET', url: '/listings', headers: auth('token-buyer') });
+    expect(res.json().items[0]).toHaveProperty('transmission');
+    expect(res.json().items[0]).not.toHaveProperty('plate');
+  });
+
+  it('applies filters and rejects invalid ones', async () => {
+    expect(
+      (await app.inject({ method: 'GET', url: '/listings?brandId=999' })).json().items,
+    ).toEqual([]);
+    expect(
+      (
+        await app.inject({ method: 'GET', url: '/listings?minYear=2019&maxPriceMinor=9000000' })
+      ).json().items,
+    ).toHaveLength(1);
+    for (const bad of ['limit=0', 'limit=500', 'brandId=abc', 'offset=-1']) {
+      expect((await app.inject({ method: 'GET', url: `/listings?${bad}` })).statusCode).toBe(400);
+    }
+  });
+});
+
+describe('GET /me y /me/listings', () => {
+  it('requires a session', async () => {
+    expect((await app.inject({ method: 'GET', url: '/me' })).statusCode).toBe(401);
+    expect((await app.inject({ method: 'GET', url: '/me/listings' })).statusCode).toBe(401);
+  });
+
+  it('returns the role and only my listings, in any status', async () => {
+    await listings.save(makeListing({ id: 'mine-draft' as ListingId, status: 'draft' }));
+    const me = await app.inject({ method: 'GET', url: '/me', headers: auth('token-advisor') });
+    expect(me.json().role).toBe('advisor');
+
+    const mine = await app.inject({
+      method: 'GET',
+      url: '/me/listings',
+      headers: auth('token-owner'),
+    });
+    expect(
+      mine
+        .json()
+        .items.map((i: { id: string }) => i.id)
+        .sort(),
+    ).toEqual(['listing-1', 'mine-draft']);
+    expect(mine.json().items[0]).not.toHaveProperty('ownerId');
+
+    const other = await app.inject({
+      method: 'GET',
+      url: '/me/listings',
+      headers: auth('token-stranger'),
+    });
+    expect(other.json().items).toEqual([]);
+  });
+});
+
+describe('revisión de anuncios (asesor)', () => {
+  beforeEach(async () => {
+    await listings.save(
+      makeListing({ id: 'pend-1' as ListingId, status: 'pending_review' }),
+      makeVehicle({ listingId: 'pend-1' as ListingId }),
+    );
+  });
+
+  it('only advisors see the queue', async () => {
+    expect((await app.inject({ method: 'GET', url: '/review/listings' })).statusCode).toBe(401);
+    expect(
+      (await app.inject({ method: 'GET', url: '/review/listings', headers: auth('token-buyer') }))
+        .statusCode,
+    ).toBe(403);
+    const ok = await app.inject({
+      method: 'GET',
+      url: '/review/listings',
+      headers: auth('token-advisor'),
+    });
+    expect(ok.json().items.map((i: { id: string }) => i.id)).toEqual(['pend-1']);
+    expect(ok.json().items[0].vehicle.plate).toBe('KNT482');
+  });
+
+  it('an advisor approves a listing and it becomes public', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/listings/pend-1/review',
+      headers: auth('token-advisor'),
+      payload: { decision: 'approve' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ id: 'pend-1', status: 'published' });
+    const list = await app.inject({ method: 'GET', url: '/listings' });
+    expect(list.json().items.map((i: { id: string }) => i.id)).toContain('pend-1');
+  });
+
+  it('a seller cannot approve their own listing', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/listings/pend-1/review',
+      headers: auth('token-owner'),
+      payload: { decision: 'approve' },
+    });
+    expect(res.statusCode).toBe(403);
+    const list = await app.inject({ method: 'GET', url: '/listings' });
+    expect(list.json().items.map((i: { id: string }) => i.id)).not.toContain('pend-1');
+  });
+
+  it('validates the request and reports missing or non-pending listings', async () => {
+    const post = (url: string, payload: unknown) =>
+      app.inject({
+        method: 'POST',
+        url,
+        headers: auth('token-advisor'),
+        payload: payload as object,
+      });
+    expect((await post('/listings/pend-1/review', { decision: 'maybe' })).statusCode).toBe(400);
+    expect(
+      (await post('/listings/pend-1/review', { decision: 'approve', status: 'sold' })).statusCode,
+    ).toBe(400);
+    expect((await post('/listings/nope/review', { decision: 'approve' })).statusCode).toBe(404);
+    expect((await post('/listings/listing-1/review', { decision: 'approve' })).statusCode).toBe(
+      409,
+    );
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/listings/pend-1/review',
+          payload: { decision: 'approve' },
+        })
+      ).statusCode,
+    ).toBe(401);
   });
 });

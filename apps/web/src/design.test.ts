@@ -34,6 +34,7 @@ const pairs: Array<[string, string, number]> = [
   ['on-action', 'action', 4.5], // botón principal (Rocoto)
   ['on-primary', 'primary', 4.5], // número de los pasos
   ['on-verified', 'verified', 4.5], // sello Oro Inca
+  ['on-ink', 'ink', 7], // botones y tarjeta en Negro Cóndor
   ['primary', 'bg', 4.5], // enlaces
 ];
 
@@ -63,7 +64,17 @@ describe('CSS de la web', () => {
     expect(css).toMatch(/\.btn\s*{[^}]*min-height:\s*(4[4-9]|[5-9]\d)px/);
   });
   it('el botón del encabezado no se parte en dos líneas en móvil', () => {
-    expect(css).toMatch(/\.bar \.btn\s*{[^}]*white-space:\s*nowrap/);
+    expect(css).toMatch(/\.top-right \.btn\s*{[^}]*white-space:\s*nowrap/);
+  });
+  it('es responsivo: móvil primero, con quiebres para tablet y escritorio', () => {
+    expect(css).toContain('@media (min-width: 40rem)');
+    expect(css).toContain('@media (min-width: 64rem)');
+    // La navegación pasa a ser una barra inferior en pantallas pequeñas.
+    expect(css).toMatch(/\.side\s*{[^}]*position:\s*fixed/);
+  });
+  it('los paneles oscuros usan el Negro Cóndor del token, no un color suelto', () => {
+    expect(css).toMatch(/\.panel-dark\s*{[^}]*var\(--t-ink\)/);
+    expect(css).toMatch(/\.btn-dark\s*{[^}]*var\(--t-ink\)/);
   });
   it('respeta prefers-reduced-motion', () => {
     expect(css).toContain('prefers-reduced-motion: reduce');

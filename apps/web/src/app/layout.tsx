@@ -5,6 +5,9 @@ import '@fontsource-variable/figtree';
 import '@fontsource/jetbrains-mono/500.css';
 import '@kuntur/design-tokens/tokens.css';
 import './globals.css';
+import { SideNav } from '../components/side-nav.tsx';
+import { SiteFooter } from '../components/site-footer.tsx';
+import { SiteHeader } from '../components/site-header.tsx';
 
 export const metadata: Metadata = {
   title: 'Kuntur Autos — El auto con historial claro',
@@ -14,16 +17,22 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F4F6FA' },
-    { media: '(prefers-color-scheme: dark)', color: '#0D1B2A' },
-  ],
+  themeColor: [{ color: '#ECEEF2' }],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es-PE">
-      <body>{children}</body>
+    <html lang="es-PE" data-theme="light">
+      <body>
+        <div className="shell">
+          <SiteHeader />
+          <SideNav />
+          <div className="content">
+            {children}
+            <SiteFooter />
+          </div>
+        </div>
+      </body>
     </html>
   );
 }

@@ -4,7 +4,7 @@ import { migrate as migratePglite } from 'drizzle-orm/pglite/migrator';
 import { sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { catalogRepositoryContract, listingRepositoryContract } from '@kuntur/contract-tests';
-import { OWNER, SAMPLE_CATALOG } from '@kuntur/core/in-memory';
+import { OWNER, SAMPLE_CATALOG, STRANGER } from '@kuntur/core/in-memory';
 import { connectPostgres } from './connect.ts';
 import type { Db } from './db.ts';
 import { MIGRATIONS_FOLDER, runMigrations } from './migrations.ts';
@@ -29,7 +29,10 @@ async function withSampleCatalog(db: Db): Promise<Db> {
   await insertCatalog(db, SAMPLE_CATALOG);
   await db
     .insert(schema.user)
-    .values({ id: OWNER, name: 'Dueño de prueba', email: 'owner@example.com' })
+    .values([
+      { id: OWNER, name: 'Dueño de prueba', email: 'owner@example.com' },
+      { id: STRANGER, name: 'Otra persona', email: 'stranger@example.com' },
+    ])
     .onConflictDoNothing();
   return db;
 }

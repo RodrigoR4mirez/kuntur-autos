@@ -96,7 +96,9 @@ a {
 .narrow {
   max-width: 40rem;
   margin: 0 auto;
-  padding: var(--space-8) var(--space-4) var(--space-16);
+  padding: var(--space-8) var(--space-6);
+  background: var(--t-surface);
+  border-radius: var(--radius-xl);
 }
 .h-page {
   font-size: var(--font-size-2xl);

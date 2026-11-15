@@ -64,7 +64,15 @@ Insignia dorada que solo aparece si el auto pasó: consulta de placa con proveed
 
 Producir primero lo que genera confianza en la visita: credencial, polo, calco y llavero.
 
-## Aplicación en la web (rediseño 2026-11-15)
+## Diseño de paneles (2026-11-15, segunda versión)
+Referencia dada por el dueño: interfaz clara con paneles redondeados, **negro fuerte**, barra lateral de iconos, pestañas en píldora, un panel grande con el auto y datos flotando encima, y un panel derecho de acciones. Adaptación a la marca:
+- **Tokens nuevos** (`tokens.json`): `Negro Cóndor` `#070B11` (barra activa, botones oscuros, tarjeta del sello), `hielo` `#ECEEF2` (fondo de página) y `panel` `#D9DDE4` (panel gris del auto), más `radius-xl` 28 px. El lima de la referencia se sustituye por **Oro Inca** (iconos, sello, botón "Ingresar").
+- **Rocoto** queda solo para el botón principal ("Vender mi auto"). Cielo Kuntur ya no domina la interfaz.
+- **Tema claro forzado** (`data-theme="light"` en `layout.tsx`) para ser fiel a la referencia. Los tokens oscuros siguen definidos pero la web no los usa.
+- **Estructura:** logo y barra superior (pestañas, ubicación, cuenta), barra lateral de iconos (en móvil pasa a barra inferior), tablero de paneles. Puntos de quiebre: 40 rem y 64 rem.
+- **Ilustración del auto** (`car-art.tsx`): es **provisional**, dibujada para el proyecto; no es una foto de un anuncio. Se reemplaza al existir la subida de fotos. Hay que usar fotos propias o con licencia (no la imagen de referencia).
+
+## Aplicación en la web (rediseño 2026-11-15, primera versión)
 La landing (`apps/web/src/app/page.tsx`, estilos en `home.css`) aplica la marca así: fondo Noche Andina (claro u oscuro según el sistema), **Rocoto solo para el botón principal** ("Vender mi auto"), **Oro Inca solo para el sello** y la palabra clave del título, Cielo Kuntur en los números de los pasos y el degradado de la banda final. La **placa** es el centro de la ficha de ejemplo (JetBrains Mono, fondo blanco, borde Noche). Títulos en Bricolage Grotesque y texto en Figtree. La ficha del hero está rotulada "Ejemplo de ficha": no es un anuncio real. `apps/web/src/design.test.ts` verifica el contraste AA (claro y oscuro) de los pares de color usados y reglas básicas del CSS.
 
 ## Accesibilidad

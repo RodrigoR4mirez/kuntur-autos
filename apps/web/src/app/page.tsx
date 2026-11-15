@@ -1,6 +1,15 @@
-import { SiteFooter } from '../components/site-footer.tsx';
-import { SiteHeader } from '../components/site-header.tsx';
+import { CarArt } from '../components/car-art.tsx';
+import {
+  IconArrow,
+  IconCoin,
+  IconGauge,
+  IconRoute,
+  IconShield,
+  IconSpark,
+  IconTag,
+} from '../components/icons.tsx';
 import { fetchBrands } from '../lib/api.ts';
+import { apiGet, formatMoney, parseListingCards } from '../lib/listings.ts';
 
 const steps = [
   {
@@ -19,123 +28,193 @@ const steps = [
 
 const controls = ['Placa consultada', 'Documentos revisados', 'Visita del asesor hecha'];
 
+const tiles = [
+  {
+    href: '/vender',
+    title: 'Vender mi auto',
+    text: 'Publica y lo verificamos',
+    icon: <IconTag />,
+    dark: true,
+  },
+  {
+    href: '/#como-funciona',
+    title: 'Cómo funciona',
+    text: 'Tres pasos claros',
+    icon: <IconRoute />,
+  },
+  {
+    href: '/#como-funciona',
+    title: 'Depósito S/ 10',
+    text: 'Reembolsable si asistes',
+    icon: <IconCoin />,
+  },
+  { href: '/#confianza', title: 'Sello Kuntur', text: 'Qué significa', icon: <IconShield /> },
+];
+
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const brands = await fetchBrands();
+  // Espera corta: la portada nunca debe quedar esperando a una API que está despertando.
+  const [brands, recent] = await Promise.all([
+    fetchBrands(),
+    apiGet('/listings?limit=2', undefined, 4000),
+  ]);
+  const latest = recent.ok ? parseListingCards(recent.data) : [];
   return (
-    <>
-      <SiteHeader />
+    <main className="board">
+      <section className="panel hero" aria-labelledby="titulo">
+        <div className="hero-head">
+          <span className="chip">Ejemplo de ficha</span>
+          <span className="chip-ghost">Todo el Perú</span>
+        </div>
+        <h1 id="titulo">El auto con historial claro.</h1>
+        <p className="lead">
+          Verificamos la placa y presentamos cada auto con un asesor propio. Ves desde arriba, como
+          el cóndor, antes de comprar.
+        </p>
 
-      <main>
-        <section className="hero">
-          <div>
-            <p className="eyebrow">Autos de segunda mano y nuevos en todo el Perú</p>
-            <h1>
-              El auto con <em>historial claro.</em>
-            </h1>
-            <p className="lead">
-              Verificamos la placa y presentamos cada auto con un asesor propio. Ves desde arriba,
-              como el cóndor, antes de comprar.
-            </p>
-            <div className="actions">
-              <a className="btn btn-primary" href="/vender">
-                Vender mi auto
-              </a>
-              <a className="btn btn-ghost" href="#como-funciona">
-                Cómo funciona
-              </a>
+        <div className="specs">
+          <div className="spec">
+            <span className="spec-icon">
+              <IconShield />
+            </span>
+            <div>
+              <small>Placa verificada</small>
+              <strong className="mono">KNT-482</strong>
             </div>
-            <ul className="perks">
-              <li>Placa verificada</li>
-              <li>Asesor propio</li>
-              <li>S/ 10 reembolsables</li>
-            </ul>
           </div>
-
-          <article className="sample" aria-label="Ejemplo de ficha de un auto verificado">
-            <div className="sample-top">
-              <span className="sample-tag">Ejemplo de ficha</span>
-              <svg viewBox="0 0 400 90" preserveAspectRatio="none" aria-hidden="true">
-                <path
-                  d="M0 90V58l40-26 34 20 52-42 46 40 38-22 58 36 40-24 54 28 38-18v60Z"
-                  fill="#1F4FD8"
-                  opacity=".35"
-                />
-                <path d="M0 90V70l52-22 40 18 56-34 50 30 44-14 66 26 92-20v36Z" fill="#16283D" />
-              </svg>
-              <span className="plate">KNT-482</span>
+          <div className="spec">
+            <span className="spec-icon">
+              <IconGauge />
+            </span>
+            <div>
+              <small>Kilometraje real</small>
+              <strong>48,200 km</strong>
             </div>
-            <div className="sample-body">
-              <span className="seal">★ Verificado por Kuntur</span>
-              <h3>Toyota Corolla 2019</h3>
-              <p className="sample-meta">Automático · Gasolina · Lima</p>
-              <p className="sample-price">S/ 52,900</p>
-              <ul className="checks">
-                {controls.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
-            </div>
-          </article>
-        </section>
+          </div>
+        </div>
 
-        <section id="como-funciona" className="section">
-          <h2>Cómo funciona</h2>
-          <p className="section-lead">Tres pasos, sin sorpresas y sin pagar por adelantado.</p>
-          <ol className="steps">
-            {steps.map((step, i) => (
-              <li key={step.title}>
-                <span className="num">{i + 1}</span>
+        <div className="car-wrap">
+          <CarArt />
+        </div>
+
+        <div className="hero-bar">
+          <span className="swatches" aria-hidden="true">
+            <i style={{ background: '#070b11' }} />
+            <i style={{ background: '#bf3417' }} />
+            <i style={{ background: '#e0a82e' }} />
+          </span>
+          <div className="hero-bar-text">
+            <strong>Ejemplo: Toyota Corolla 2019</strong>
+            <small>Tres controles listos · S/ 52,900</small>
+          </div>
+          <a className="btn btn-dark" href="/#como-funciona">
+            Cómo funciona <IconArrow />
+          </a>
+        </div>
+      </section>
+
+      <aside className="panel side-panel" aria-labelledby="asesor">
+        <div className="side-head">
+          <span className="spec-icon">
+            <IconSpark />
+          </span>
+          <div>
+            <h2 id="asesor">Tu asesor Kuntur</h2>
+            <small>Te acompaña en cada visita</small>
+          </div>
+        </div>
+        <div className="tiles">
+          {tiles.map((t) => (
+            <a key={t.title} href={t.href} className={t.dark ? 'tile tile-dark' : 'tile'}>
+              <span className="tile-icon">{t.icon}</span>
+              <strong>{t.title}</strong>
+              <small>{t.text}</small>
+            </a>
+          ))}
+        </div>
+        <div className="recent">
+          <div className="recent-head">
+            <h3>Recién publicados</h3>
+            <a href="/autos">Ver todos</a>
+          </div>
+          {latest.length > 0 ? (
+            <ul>
+              {latest.map((l) => (
+                <li key={l.id}>
+                  <a href={`/anuncios/${encodeURIComponent(l.id)}`}>
+                    <span>
+                      <strong>{l.title}</strong>
+                      <small>
+                        {l.year} · {l.city}
+                      </small>
+                    </span>
+                    <span className="mono">{formatMoney(l.price)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="recent-empty">
+              Aún no hay autos publicados. <a href="/vender">Publica el tuyo</a> y un asesor lo
+              revisa.
+            </p>
+          )}
+        </div>
+        <div className="note">
+          <p>“Pagas S/ 10 para reservar tu visita. Te los devolvemos cuando asistas.”</p>
+          <a className="btn btn-gold btn-sm" href="/ingresar">
+            Ingresar <IconArrow />
+          </a>
+        </div>
+      </aside>
+
+      <section id="como-funciona" className="panel steps-card" aria-labelledby="como">
+        <div className="card-head">
+          <h2 id="como">Cómo funciona</h2>
+          <span className="circle-arrow">
+            <IconArrow />
+          </span>
+        </div>
+        <ol className="steps">
+          {steps.map((step, i) => (
+            <li key={step.title}>
+              <span className="num">{i + 1}</span>
+              <div>
                 <h3>{step.title}</h3>
                 <p>{step.text}</p>
-              </li>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section id="confianza" className="panel panel-dark seal-card" aria-labelledby="sello">
+        <div className="card-head">
+          <h2 id="sello">Verificado por Kuntur</h2>
+          <span className="circle-arrow circle-arrow-dark">
+            <IconArrow />
+          </span>
+        </div>
+        <span className="seal">★ El sello se gana, no se compra</span>
+        <ul className="checks">
+          {controls.map((c) => (
+            <li key={c}>{c}</li>
+          ))}
+        </ul>
+        <small>Si falta un control, no mostramos el sello.</small>
+      </section>
+
+      {brands.length > 0 && (
+        <section className="panel brands-card" aria-labelledby="marcas">
+          <h2 id="marcas">Marcas que ya puedes encontrar</h2>
+          <ul className="chips">
+            {brands.map((b) => (
+              <li key={b.id}>{b.name}</li>
             ))}
-          </ol>
+          </ul>
         </section>
-
-        <section id="confianza" className="section trust">
-          <div>
-            <span className="seal">★ Verificado por Kuntur</span>
-            <h2>El sello se gana, no se compra</h2>
-            <p>
-              Solo lo lleva el auto que pasó tres controles. Si falta uno, no lo mostramos. Así
-              sabes qué estás mirando antes de ir a verlo.
-            </p>
-          </div>
-          <div className="trust-card">
-            <h3>Los tres controles</h3>
-            <ul className="checks">
-              {controls.map((c) => (
-                <li key={c}>{c}</li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {brands.length > 0 && (
-          <section className="section" aria-labelledby="marcas">
-            <h2 id="marcas">Marcas que ya puedes encontrar</h2>
-            <ul className="chips">
-              {brands.map((b) => (
-                <li key={b.id}>{b.name}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <section className="cta-band" aria-labelledby="vende">
-          <div>
-            <h2 id="vende">¿Quieres vender tu auto?</h2>
-            <p>Publícalo gratis. Nosotros verificamos la placa y lo presentamos con un asesor.</p>
-          </div>
-          <a className="btn btn-primary" href="/vender">
-            Publicar mi auto
-          </a>
-        </section>
-      </main>
-
-      <SiteFooter />
-    </>
+      )}
+    </main>
   );
 }
