@@ -38,7 +38,13 @@ function pick(tiles: readonly Tile[], keys: readonly string[]): Tile[] {
  * Sala de exhibición: el auto al centro y la información en tarjetas alrededor.
  * "Ver auto en detalle" oculta las tarjetas (sin mover nada: no hay salto de diseño).
  */
-export function Showroom({ data }: { data: ShowroomData }) {
+export interface ShowroomPhoto {
+  readonly src: string;
+  readonly alt: string;
+  readonly credit: string;
+}
+
+export function Showroom({ data, photo }: { data: ShowroomData; photo?: ShowroomPhoto }) {
   const [focus, setFocus] = useState(false);
   const all = [...data.specs, ...data.history, data.plate];
 
@@ -66,9 +72,25 @@ export function Showroom({ data }: { data: ShowroomData }) {
 
         <div className="show-stage">
           <div className="show-car">
-            <CarArt />
-            <div className="show-platform" aria-hidden="true" />
-            <small className="show-photo-note">Ilustración. Fotos reales próximamente.</small>
+            {photo ? (
+              <>
+                <img
+                  className="show-photo"
+                  src={photo.src}
+                  alt={photo.alt}
+                  width={1400}
+                  height={934}
+                  fetchPriority="high"
+                />
+                <small className="show-photo-note">{photo.credit}</small>
+              </>
+            ) : (
+              <>
+                <CarArt />
+                <div className="show-platform" aria-hidden="true" />
+                <small className="show-photo-note">Ilustración. Fotos reales próximamente.</small>
+              </>
+            )}
           </div>
         </div>
 

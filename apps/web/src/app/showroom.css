@@ -46,6 +46,17 @@
   position: relative;
   z-index: 1;
 }
+.show-photo {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1400 / 934;
+  object-fit: cover;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 18px 40px rgb(7 11 17 / 0.25);
+}
 .show-platform {
   position: absolute;
   left: 4%;
