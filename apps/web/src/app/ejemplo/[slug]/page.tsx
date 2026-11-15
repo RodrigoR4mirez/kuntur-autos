@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation';
 import { Showroom } from '../../../components/showroom.tsx';
 import { EXAMPLES, exampleShowroom, findExample } from '../../../lib/examples.ts';
 
+/** Solo existen los 5 ejemplos: cualquier otro slug es 404. */
+export const dynamicParams = false;
+
 type Params = Promise<{ slug: string }>;
 
 export function generateStaticParams() {

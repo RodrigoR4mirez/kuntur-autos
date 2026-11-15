@@ -54,6 +54,8 @@ Sin secretos ni valores de configuración. Las fechas exactas solo se conocen do
 
 - **Galería de ejemplo (2026-11-15):** 5 autos de ejemplo con fotos gratuitas de Pexels en `/ejemplo` (ver `04-marca.md`). Se descartaron fotos modificadas, verticales o de desierto por no parecerse a un auto en venta. Cada foto se bajó de la dirección pública de imágenes de Pexels (la página de Pexels bloquea las descargas automáticas).
 
+- **Error propio corregido:** `/ejemplo/<slug inexistente>` daba 500 en staging; ahora `dynamicParams = false` y responde 404 (verificado en un build de producción local; falta confirmarlo en staging tras el despliegue).
+
 ## Configuración que vive fuera del repositorio (sin valores)
 | Dónde | Qué | Quién |
 |---|---|---|
