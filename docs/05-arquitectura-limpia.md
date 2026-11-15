@@ -6,7 +6,7 @@ Objetivo: que el código se entienda rápido, se pueda cambiar una pieza sin rom
 
 | Pieza | Elección | Dónde vive |
 |---|---|---|
-| Web | Next.js | `apps/web` (pendiente) |
+| Web | Next.js 16 (React 19) | `apps/web` (landing hecha; sin despliegue todavía) |
 | API HTTP | Fastify | `apps/api` |
 | Base de datos | PostgreSQL con Drizzle ORM | `packages/adapters/db-postgres` (hecho: esquema, migración, repositorios, catálogo inicial) |
 | Sesiones | Better Auth en nuestro servidor (correo y Google) | `packages/adapters/auth` (hecho; ver `09-autenticacion.md`) |
@@ -54,6 +54,9 @@ packages/core/src/
 packages/contracts/        esquemas Zod de entrada y salida
 packages/adapters/         un paquete por proveedor: system (reloj, UUID), db-postgres (PostgreSQL con Drizzle; también las tablas de usuarios y sesiones), auth (Better Auth), notifications (correo SMTP y consola); luego payments-culqi...
 packages/contract-tests/   suites de contrato: cualquier implementación de un puerto debe pasarlas
+apps/web/src/
+  app/                     páginas de Next.js (landing); estilos con los tokens de `design-tokens`
+  lib/api.ts               acceso a la API desde el servidor; si falla, la página sigue funcionando
 apps/api/src/
   interface/http/          rutas, presentadores, errores
   app.ts                   arma Fastify con los casos de uso
@@ -122,5 +125,5 @@ Las pruebas del dominio, los casos de uso, la API y las suites de contrato con P
 - **Proveedor de correo real** para producción (la configuración es solo `SMTP_URL` y `MAIL_FROM`) y dominio propio.
 - Repositorio de citas en PostgreSQL (llega con el depósito, Fase 2); hoy `determineAccessLevel` usa uno en memoria vacío, lo que es correcto mientras no se puedan crear citas.
 - Subida de fotos, búsqueda con filtros sobre PostgreSQL (el puerto y el índice parcial ya existen), moderación y panel de administración.
-- `apps/web` con Next.js, CORS y pantallas de inicio de sesión.
+- Web: buscador, ficha de auto, pantallas de inicio de sesión, CORS y despliegue de `apps/web` (hoy solo la landing, que lee `/catalog/brands` si existe `KUNTUR_API_URL`).
 - Curar el catálogo inicial (versiones, modelos faltantes): hoy es una muestra de 12 marcas y 70 modelos.
