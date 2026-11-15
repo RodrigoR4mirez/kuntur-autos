@@ -55,4 +55,38 @@ describe('proxyToApi', () => {
     );
     expect(res.status).toBe(502);
   });
+
+  it('reintenta una vez un GET cuando la primera conexión falla (arranque en frío)', async () => {
+    let calls = 0;
+    const fetcher = (async () => {
+      calls += 1;
+      if (calls === 1) throw new Error('timeout');
+      return Response.json({ ok: true });
+    }) as unknown as typeof fetch;
+    const res = await proxyToApi(
+      new Request('http://web.test/api/x'),
+      '/x',
+      'http://api.test',
+      fetcher,
+    );
+    expect(res.status).toBe(200);
+    expect(calls).toBe(2);
+  });
+
+  it('no reintenta un POST: no duplica la acción', async () => {
+    let calls = 0;
+    const fetcher = (async () => {
+      calls += 1;
+      throw new Error('caída');
+    }) as unknown as typeof fetch;
+    const res = await proxyToApi(
+      new Request('http://web.test/api/x', { method: 'POST', body: '{}' }),
+      '/x',
+      'http://api.test',
+      fetcher,
+    );
+    expect(res.status).toBe(502);
+    expect(calls).toBe(1);
+    expect((await res.json()).error.message).toContain('despertando');
+  });
 });

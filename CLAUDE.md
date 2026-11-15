@@ -44,6 +44,9 @@ Todo cambio pasa por CI y seguridad antes de `main`; `main` publica una imagen e
 - `pnpm tokens`: regenera `packages/design-tokens/tokens.css`.
 - Los paquetes se consumen como TypeScript fuente (sin paso de build); la API corre con `node src/main.ts`. Los imports llevan extensión `.ts`. No uses sintaxis de TypeScript que no se pueda borrar (enums, parameter properties, namespaces): Node ejecuta el código sin compilar y `erasableSyntaxOnly` lo verifica.
 
+## Pull requests y fusión (indicación del dueño, 2026-11-15)
+El agente hace `git pull`, crea la rama, abre el pull request, revisa las comprobaciones con `gh` y **fusiona él mismo cuando todas estén en verde**, y luego revisa "Despliegue a staging". Nunca trabaja directo en `main`. No fusiona si hay una comprobación en rojo o sin verificar. Producción sigue siendo solo a petición expresa del dueño. No toca secretos ni variables de GitHub.
+
 ## Flujo por funcionalidad
 Plan → implementar → pruebas → `/simplify` → `/code-review` → `/security-review` → revisión humana.
 
