@@ -11,6 +11,6 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.18",
     "@kuntur/core": "workspace:*",
-    "better-auth": "^1.7.18"
+    "better-auth": "^1.7.26"
   }
 }
